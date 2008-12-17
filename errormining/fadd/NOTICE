@@ -1,0 +1,9 @@
+This directory contains Jan Daciuk's Fadd library, that was retrieved
+from:
+
+http://www.eti.pg.gda.pl/katedry/kiw/pracownicy/Jan.Daciuk/personal/fadd.html
+
+The license for Fadd is included as License.txt in this directory.
+
+The declaration of the 'fsa' class was moved to fadd.h, to make it
+possible to use it directly, rather than through the C interface.

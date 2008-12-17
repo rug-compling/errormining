@@ -1,0 +1,4 @@
+#include <errormining/Sentence.hh>
+
+using namespace std;
+using namespace errormining;

@@ -1,0 +1,101 @@
+Error-mining in parsing results
+-------------------------------
+
+Please send flames to: Daniel de Kok <d.j.a.de.kok@rug.nl>
+
+= Introduction =
+
+This program implements error mining in parsing results, as described
+in [1]. In addition to unigrams and bigrams, larger problematic ngrams
+can also be mined.
+
+A viewer for the results of the error mining is also included. The
+error miner produces a plain text file with suspicious forms. These
+forms can be stored in a sqlite database, along with unparsable
+sentences. The viewer provides a comfortable interface to browse the
+mining database.
+
+= Compilation =
+
+Requirements:
+
+* A C++ standard library that includes support for the TR1 unordered_set
+  and unordered_map classes. A recent version of GNU C++ will do fine
+  (tested with g++ 4.3.1). Note that Mac OS X has a very old version of
+  g++ (4.0.1 in Leopard), and will not work, because the unordered_set:erase
+  method does not return an iterator, which is a requirements of TR1.
+  Complain to Apple and/or compile a newer g++/libstdc++ through MacPorts
+  or Fink.
+* Qt 4.x (tested with 4.4.0).
+
+Qt includes a tool for generating native build infrastructure, named
+'qmake'. Executing 'qmake' in the main source directory will generate
+all necessary build files. Subsequently, 'make' can be invoked on most
+UNIX platforms to compile the error miner and viewer.
+
+To use the error miner, you will need perfect hash automata of the
+types occurring in parsable and unparsable sentences. These automata
+can be created with the fsa_build utility from Jan Daciuk [2].
+
+= Creating a perfect hash automaton =
+
+The miner requires perfect hash automata for all types that occur
+in parsable and unparsable sentences. An automaton can be created
+in the following manner:
+
+tr -s '\012\011 ' '\012' < sentence_file | \
+  LANG=POSIX LC_ALL=POSIX sort -u | fsa_build -N -o dict.fsa
+
+This step should be performed for creating an automaton for parsable
+sentences, and one for unparsable sentences.
+
+= Mining =
+
+Usage information can be obtained by running the miner without any
+options:
+
+./mine
+
+If you don't want to adjust the default parameters, you can start
+mining parses by providing a perfect hash automaton, and files
+with parsable and unparsable sentences:
+
+./mine parsable.fsa unparsable.fsa parsable-sentences unparsable-sentences
+
+The output format consists of the following elements:
+
+[ngram] [suspicion] [f(ngram)] [f_unparsable(ngram)]
+
+For example:
+
+me blijft 1.0 4 4
+
+= Viewing =
+
+The viewer requires a SQLite database with all forms and unparsable
+sentences. You can create this database with the 'createminedb'
+utility:
+
+bin/createminedb mining_results unparsable_sentences minedb
+
+This will create the 'minedb' database file. The database can now
+be explored with the miningviewer:
+
+bin/miningviewer minedb
+
+= Licensing =
+
+Jan Daciuk's Fadd library, which is included in a slightly modified form
+in the 'fadd' directory, is licensed under the LGPL. The license text can
+be found in 'fadd/License.txt'.
+
+= Todo =
+
+- Clean up code and more error checking for database operations.
+
+= References =
+
+[1] Error mining in parsing results, Benoît Sagot and Éric de la Clergerie,
+    Proceedings of the 21st International Conference on Computational
+    Linguistics and the 44th annual meeting of the ACL, 2006
+[2] http://www.eti.pg.gda.pl/katedry/kiw/pracownicy/Jan.Daciuk/personal/fsa.html

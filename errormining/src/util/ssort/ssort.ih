@@ -1,0 +1,19 @@
+/*
+ * ssort.ih
+ *
+ *  Created on: Sep 24, 2008
+ *      Author: dekok
+ */
+
+#ifndef SSORT_IH_
+#define SSORT_IH_
+
+#include <stdexcept>
+#include <vector>
+
+#include <errormining/util/ssort.hh>
+
+using namespace std;
+using namespace errormining::util;
+
+#endif /* SSORT_IH_ */

@@ -1,0 +1,7 @@
+#include <string>
+
+#include <errormining/HashAutomaton.hh>
+#include <fadd/fadd.h>
+
+using namespace std;
+using namespace errormining;

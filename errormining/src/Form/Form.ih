@@ -1,0 +1,9 @@
+#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <vector>
+
+#include <errormining/Form.hh>
+
+using namespace std;
+using namespace errormining;

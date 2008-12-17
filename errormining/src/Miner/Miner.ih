@@ -1,0 +1,20 @@
+#include <algorithm>
+#include <cmath>
+#include <iterator>
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
+#include <vector>
+
+#include <tr1/functional>
+#include <tr1/unordered_set>
+
+#include <errormining/Form.hh>
+#include <errormining/Miner.hh>
+#include <errormining/Sentence.hh>
+#include <errormining/SuffixArray.hh>
+
+using namespace std;
+using namespace std::tr1;
+using namespace errormining;

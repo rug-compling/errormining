@@ -1,0 +1,114 @@
+Wed Dec 10 11:41:53 CET 2008
+
+- Integrate the error miner and viewer in the same build
+  infrastructure. Simply invoking 'qmake && make' in the top-level
+  directory will build the miner, viewer, and evaluator.
+
+Tue Nov 11 10:35:42 CET 2008
+
+- Add the '-e val' option for enabling sparseness correction, and
+  specifying the alpha variable. In case of doubt: 1.0 is a sensible
+  value for alpha.
+
+Tue Nov 4 10:45:49 CET 2008
+
+- Don't pass all sentence handlers as a vector to the constructor
+  of TokenizedSentenceReader, but provide addHandler() and
+  removeHandler() methods.
+- Add smoothing, as described by Sagot and de la Clergerie.
+  Smoothing is enabled with the '-b val' flag, where 'val' is the
+  value used for the beta parameter.
+- Remove the -a (all n-grams) option. It's not really useful for
+  *error* mining, and does not really make much sense now that we
+  have n-gram expansion.
+
+Thu Oct 23 12:01:48 CEST 2008
+
+- Simplify Miner::handleSentence().
+- Add the '-c' option to disable ngram expansion.
+- Simplify SuffixArray::compare(). As a bonus, due to less
+  operations that involve iterators, this gives a small
+  performance gain.
+
+0.1.6 (October 6, 2007)
+
+- Cache unigram ratios. Although binary search is used to locate
+  a sequence in the suffix array, counting the frequency of a
+  suffix requires a linear count. Since short n-grams occur very
+  frequently, this can take a large amount of time. Caching unigrams
+  takes relatively little memory, and give a considerable speedup
+  (54 to 12 seconds for the whole mining process on my test set).
+- Use the ssort algorithm by McIlroy and McIlroy. This speeds
+  up suffix sorting considerably.
+- Use perfect hashing and suffix arrays to look up arbitrary
+  length n-grams in the parsable and unparsable sentence lists.
+- Discard the '-m' option for mining a range of n-grams. Instead
+  use a new method that can extend n-grams (normally unigrams)
+  when a longer n-gram has a higher 'error rate' than its parts.
+
+0.1.5 (September 5, 2008)
+
+- Add a new '-m' option to mine a range of n-grams in combination
+  with '-n'. For instance, '-n 1 -m 2' will mine unigrams and
+  bigrams. This option is still experimental, and probably doesn't
+  produce good results yet.
+- Rename the '-m' option to '-u'.
+- If the '-s' option is used to exclude forms with a near-zero
+  suspicion, remove the for from the set of forms as well. This
+  frees up more memory, and excludes these forms from the results.
+
+0.1.4 (August 31, 2008)
+
+- Check if the conversion of an option argument was correct.
+- Add the '-s t' option. This option removes observations that
+  have dropped below the threshold t. If t is near-zero, this
+  has little effect on the analysis, while it speeds up the
+  analysis considerably.
+- Avoid unnecessary map lookups, giving a slight speed-up.
+
+0.1.3 (July 15, 2008)
+
+- Add the '-v' option for verbose output.
+- Make the miner observable.
+
+0.1.2 (July 13, 2008)
+
+- Add the '-a' option to include all ngrams in the analysis. With
+  this option, forms that only occur in parsable sentences are also
+  included.
+- Switch to TR1 unordered_set for storing forms, giving a nice
+  performance win at the cost of support for older g++ versions.
+- Fix usage information a bit.
+
+0.1.1 (July 9, 2008)
+
+- Move source files and internal headers to the src/ subdirectory.
+
+0.1.0 (July 9, 2008)
+
+- Port to C++.
+
+0.0.4 (June 30, 2008)
+
+- By default, restrict mining to forms that have suspicion. Add the
+  '-a' option for mining of all forms. Mining just the forms with
+  suspicion requires less memory (and time).
+- Combine observation and form suspicion calculations in one single
+  method. As a result, observation suspicions can be stored temporally,
+  making the Observation class unnecessary. Sentences now just store
+  an array of observed forms, and Forms do not have a list of
+  observations. This reduces memory use quite a bit.
+- Wrap mining results in a MineResults instance, which contains a
+  reference to the list of sentences as well. This is more convenient
+  when we want to show sample sentences for suspect n-grams in the
+  future.
+
+0.0.3 (June 12, 2008)
+
+- Add the ngram observation frequencies (total and unparsable) to
+  the default output.
+
+0.0.2 (June 12, 2008)
+
+- Add the '-m freq' option to specify a minimal frequency threshold
+  for observed ngrams in unparsable sentences.

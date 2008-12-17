@@ -1,0 +1,18 @@
+#include <cmath>
+#include <set>
+
+#include <QClipboard>
+#include <QMainWindow>
+#include <QRegExp>
+#include <QSettings>
+#include <QSqlQuery>
+#include <QSqlQueryModel>
+#include <QTreeWidgetItem>
+#include <QWidget>
+
+#include "FormTreeWidgetItem.hh"
+#include "MinerMainWindow.hh"
+
+using namespace std;
+using namespace miningviewer;
+
