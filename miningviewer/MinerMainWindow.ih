@@ -1,6 +1,8 @@
 #include <cmath>
 #include <set>
 
+#include <tr1/memory>
+
 #include <QClipboard>
 #include <QMainWindow>
 #include <QRegExp>
@@ -10,12 +12,13 @@
 #include <QTreeWidgetItem>
 #include <QWidget>
 
-#include <errormining/Scoring.hh>
+#include <errormining/ScoringMethod.hh>
 
 #include "FormTreeWidgetItem.hh"
 #include "MinerMainWindow.hh"
 
 using namespace std;
+using namespace std::tr1;
 using namespace errormining;
 using namespace miningviewer;
 

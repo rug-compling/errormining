@@ -323,6 +323,7 @@ void MinerMainWindow::showForms()
 	d_minerMainWindow.formsTreeWidget->clear();
 
 	ScoringMethod curScoringMethod = scoringMethod();
+	shared_ptr<ScoreFun> scoreFun = selectScoreFun(curScoringMethod);
 
 	QList<QTreeWidgetItem *> items;
 
@@ -342,18 +343,8 @@ void MinerMainWindow::showForms()
 				continue;
 
 		// Score this form.
-		double score = 0.0;
-		if (curScoringMethod == SCORING_SUSP)
-			score = suspicion;
-		else if (curScoringMethod == SCORING_SUSP_OBS)
-			score = suspicion * suspFreq;
-		else if (curScoringMethod == SCORING_SUSP_UNIQSENTS)
-			score = suspicion * uniqSentsFreq;
-		else if (curScoringMethod == SCORING_SUSP_LN_OBS)
-			score = suspicion * log(suspFreq);
-		else if (curScoringMethod == SCORING_SUSP_LN_UNIQSENTS)
-			score = suspicion * log(uniqSentsFreq);
-		
+		double score = (*scoreFun)(suspicion, suspFreq, uniqSentsFreq);
+
 		// Create and add an item for this form.
 		QTreeWidgetItem *item = new FormTreeWidgetItem(0);
 		item->setText(0, form);

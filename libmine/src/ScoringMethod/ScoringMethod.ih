@@ -1,0 +1,6 @@
+#include <tr1/memory>
+
+#include <errormining/ScoringMethod.hh>
+
+using namespace std::tr1;
+using namespace errormining;

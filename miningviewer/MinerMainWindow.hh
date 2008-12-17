@@ -12,7 +12,7 @@
 #include <QTreeWidgetItem>
 #include <QWidget>
 
-#include <errormining/Scoring.hh>
+#include <errormining/ScoringMethod.hh>
 
 #include "ui_MinerMainWindow.h"
 

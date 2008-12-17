@@ -1,4 +1,4 @@
-include(../projects.pri)
+include('../projects.pri')
 
 TEMPLATE = app
 TARGET = ../bin/miningeval

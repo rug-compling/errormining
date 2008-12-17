@@ -5,6 +5,7 @@
 #include <string>
 #include <utility>
 
+#include <tr1/memory>
 #include <tr1/unordered_set>
 
 #include <QCoreApplication>
@@ -13,7 +14,7 @@
 #include <QString>
 #include <QVariant>
 
-#include <errormining/Scoring.hh>
+#include <errormining/ScoringMethod.hh>
 
 using namespace std;
 using namespace std::tr1;
@@ -77,6 +78,7 @@ ScoringMethod selectScoringMethod(string const &scoringMethod)
 FormScoreSet scoreForms(ScoringMethod scoringMethod)
 {
 	FormScoreSet formScores;
+	shared_ptr<ScoreFun> scoreFun = selectScoreFun(scoringMethod);
 
 	QSqlQuery query("SELECT form, suspicion, suspFreq, uniqSentsFreq"
 		" FROM forms");// WHERE suspicion > 1.5 * (SELECT AVG(suspicion) FROM forms)");
@@ -87,18 +89,7 @@ FormScoreSet scoreForms(ScoringMethod scoringMethod)
 		uint suspFreq = query.value(2).toUInt();
 		uint uniqSentsFreq = query.value(3).toUInt();
 
-		double score = 0.0;
-		if (scoringMethod == SCORING_SUSP)
-			score = suspicion;
-		else if (scoringMethod == SCORING_SUSP_OBS)
-			score = suspicion * suspFreq;
-		else if (scoringMethod == SCORING_SUSP_UNIQSENTS)
-			score = suspicion * uniqSentsFreq;
-		else if (scoringMethod == SCORING_SUSP_LN_OBS)
-			score = suspicion * log(suspFreq);
-		else if (scoringMethod == SCORING_SUSP_LN_UNIQSENTS)
-			score = suspicion * log(uniqSentsFreq);
-
+		double score = (*scoreFun)(suspicion, suspFreq, uniqSentsFreq);
 		formScores.insert(FormScore(form, score, suspFreq));
 	}
 
