@@ -1,2 +1,3 @@
 TEMPLATE = subdirs
-SUBDIRS += createminedb errormining miningeval miningviewer
+CONFIG += ordered
+SUBDIRS += errormining createminedb miningeval miningviewer
