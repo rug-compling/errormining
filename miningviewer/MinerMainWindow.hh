@@ -12,6 +12,8 @@
 #include <QTreeWidgetItem>
 #include <QWidget>
 
+#include <errormining/Scoring.hh>
+
 #include "ui_MinerMainWindow.h"
 
 namespace miningviewer {
@@ -40,14 +42,11 @@ private:
 	MinerMainWindow(MinerMainWindow const &other);
 	MinerMainWindow &operator=(MinerMainWindow const &other);
 
-	enum ScoringMethod { SCORING_SUSP, SCORING_SUSP_OBS, SCORING_SUSP_UNIQSENTS,
-		SCORING_SUSP_LN_OBS, SCORING_SUSP_LN_UNIQSENTS };
-
 	bool isValidForm(QString const &form) const;
 	void readSettings();
 	void removeForm(QString const &form);
 	void showForms();
-	ScoringMethod scoringMethod();
+	errormining::ScoringMethod scoringMethod();
 	void updateSentenceList();
 	void writeSettings();
 

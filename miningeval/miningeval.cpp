@@ -13,12 +13,11 @@
 #include <QString>
 #include <QVariant>
 
+#include <errormining/Scoring.hh>
+
 using namespace std;
 using namespace std::tr1;
-
-// XXX - move to a header, shared with MinerMainWindow.cpp
-enum ScoringMethod { SCORING_SUSP, SCORING_SUSP_OBS, SCORING_SUSP_UNIQSENTS,
-	SCORING_SUSP_LN_OBS, SCORING_SUSP_LN_UNIQSENTS };
+using namespace errormining;
 
 struct FormScore
 {

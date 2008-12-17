@@ -10,9 +10,12 @@
 #include <QTreeWidgetItem>
 #include <QWidget>
 
+#include <errormining/Scoring.hh>
+
 #include "FormTreeWidgetItem.hh"
 #include "MinerMainWindow.hh"
 
 using namespace std;
+using namespace errormining;
 using namespace miningviewer;
 

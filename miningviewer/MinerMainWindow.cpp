@@ -364,7 +364,7 @@ void MinerMainWindow::showForms()
 	d_minerMainWindow.formsTreeWidget->insertTopLevelItems(0, items);
 }
 
-MinerMainWindow::ScoringMethod MinerMainWindow::scoringMethod()
+ScoringMethod MinerMainWindow::scoringMethod()
 {
 	int index = d_minerMainWindow.scoringComboBox->currentIndex();
 
