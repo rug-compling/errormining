@@ -1,4 +1,4 @@
-include('../projects.pri')
+include('../errormining.pri')
 
 TEMPLATE = app
 TARGET = ../bin/mine
