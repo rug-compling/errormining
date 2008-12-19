@@ -6,9 +6,9 @@
 #include <utility>
 
 #include <tr1/memory>
-#include <tr1/unordered_set>
 
 #include <QCoreApplication>
+#include <QSet>
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QString>
@@ -96,9 +96,9 @@ FormScoreSet scoreForms(ScoringMethod scoringMethod)
 	return formScores;
 }
 
-unordered_set<size_t> allSentences(bool unparsable)
+QSet<size_t> allSentences(bool unparsable)
 {
-	unordered_set<size_t> sentenceIds;
+	QSet<size_t> sentenceIds;
 	
 	QSqlQuery query;
 	query.prepare("SELECT sentences.rowid FROM sentences "
@@ -113,9 +113,9 @@ unordered_set<size_t> allSentences(bool unparsable)
 	return sentenceIds;
 }
 
-unordered_set<size_t> formSentences(QString const &form, bool unparsable)
+QSet<size_t> formSentences(QString const &form, bool unparsable)
 {
-	unordered_set<size_t> sentenceIds;
+	QSet<size_t> sentenceIds;
 
 	QSqlQuery query;
 	query.prepare("SELECT formSentence.sentenceId "
@@ -162,20 +162,20 @@ int main(int argc, char *argv[])
 
 	FormScoreSet formScores(scoreForms(selectScoringMethod(argv[2])));
 
-	unordered_set<size_t> allParsableFound;
-	unordered_set<size_t> allUnparsableFound;
+	QSet<size_t> allParsableFound;
+	QSet<size_t> allUnparsableFound;
 
-	unordered_set<size_t> allParsable(allSentences(false));
-	unordered_set<size_t> allUnparsable(allSentences(true));
+	QSet<size_t> allParsable(allSentences(false));
+	QSet<size_t> allUnparsable(allSentences(true));
 
 	size_t i = 0;
 	FormScoreSet::const_iterator iter = formScores.begin();
 	while (iter != formScores.end())
 	{
-		unordered_set<size_t> unparsableFound = formSentences(iter->form, true);
-		allUnparsableFound.insert(unparsableFound.begin(), unparsableFound.end());
-		unordered_set<size_t> parsableFound = formSentences(iter->form, false);
-		allParsableFound.insert(parsableFound.begin(), parsableFound.end());
+		QSet<size_t> unparsableFound = formSentences(iter->form, true);
+		allUnparsableFound.unite(unparsableFound);
+		QSet<size_t> parsableFound = formSentences(iter->form, false);
+		allParsableFound.unite(parsableFound);
 
 		double recall = allUnparsableFound.size() /
 			static_cast<double>(allUnparsable.size());
