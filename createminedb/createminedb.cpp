@@ -2,14 +2,13 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
-#include <map>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include <QCoreApplication>
 #include <QFile>
+#include <QSet>
 #include <QString>
 #include <QStringList>
 #include <QSqlDatabase>
@@ -120,13 +119,22 @@ void addSentences(char const *filename, bool unparsable)
 
 vector<pair<uint, uint> > findFormSentencePairs(int n)
 {
-	vector<pair<uint, uint> > formSentencePairs;
-
+	QHash<QString, uint> formIds;
 	{
 		// Prepare a query for finding forms.
 		QSqlQuery formIdQuery;
-		formIdQuery.prepare("SELECT rowid FROM forms WHERE form = :form");
-		
+		formIdQuery.prepare("SELECT form, rowid FROM forms");
+		formIdQuery.exec();
+		while (formIdQuery.next())
+		{
+			QString form = formIdQuery.value(0).toString();
+			uint formId = formIdQuery.value(1).toUInt();
+			formIds[form] = formId;
+		}
+	}
+
+	vector<pair<uint, uint> > formSentencePairs;
+	{
 		// Select all sentences.
 		QSqlQuery sentenceQuery("SELECT rowid, sentence FROM sentences");
 		sentenceQuery.exec();
@@ -147,21 +155,19 @@ vector<pair<uint, uint> > findFormSentencePairs(int n)
 					copy(words.begin() + i, words.begin() + i + j + 1, back_inserter(formList));
 					
 					QString form = formList.join(" ");
-					formIdQuery.bindValue(":form", form);
-					formIdQuery.exec();
+					
+					QHash<QString, uint>::const_iterator iter = formIds.find(form);
 					
 					// Sometimes a form that is encountered in a sentence is not known because
 					// a frequency threshold is set in the miner. In this case, skip this form.
-					if (!formIdQuery.next())
+					if (iter == formIds.end())
 						continue;
 
-					uint formId = formIdQuery.value(0).toUInt();
-					
-					formSentencePairs.push_back(make_pair(formId, sentenceId));
+					formSentencePairs.push_back(make_pair(iter.value(), sentenceId));
 				}
 		}
 	}
-	
+
 	return formSentencePairs;
 }
 
@@ -187,10 +193,10 @@ void populateLinkTable(vector<pair<uint, uint> > const &formSentencePairs)
 }
 
 // Extract the set of form IDs, from the form-sentence link table.
-set<uint> extractFormIds(
+QSet<uint> extractFormIds(
 	vector<pair<uint, uint> > const &formSentencePairs)
 {
-	set<uint> formIds;
+	QSet<uint> formIds;
 
 	for (vector<pair<uint, uint> >::const_iterator iter =
 			formSentencePairs.begin(); iter != formSentencePairs.end();
@@ -200,9 +206,9 @@ set<uint> extractFormIds(
 	return formIds;
 }
 
-void calcUniqSents(set<uint> const &sentenceIds)
+void calcUniqSents(QSet<uint> const &sentenceIds)
 {
-	map<uint,uint> uniqSentsFreqs;
+	QMap<uint,uint> uniqSentsFreqs;
 
 	{
 		// Find the number of unique unparsable sentences for a given form.
@@ -212,7 +218,7 @@ void calcUniqSents(set<uint> const &sentenceIds)
 			"AND formSentence.sentenceId = sentences.rowid "
 			"AND sentences.unparsable = 'true'");
 
-		for (set<uint>::const_iterator iter = sentenceIds.begin();
+		for (QSet<uint>::const_iterator iter = sentenceIds.begin();
 				iter != sentenceIds.end(); ++iter)
 		{
 			uniqueSentenceQuery.bindValue(":formId", *iter);
@@ -228,11 +234,11 @@ void calcUniqSents(set<uint> const &sentenceIds)
 		"WHERE forms.rowid = :formId");
 
 	QSqlDatabase::database().transaction();
-	for (map<uint, uint>::const_iterator iter = uniqSentsFreqs.begin();
+	for (QMap<uint, uint>::const_iterator iter = uniqSentsFreqs.begin();
 		iter != uniqSentsFreqs.end(); ++iter)
 	{
-		updateUniqSentsQuery.bindValue(":formId", iter->first);
-		updateUniqSentsQuery.bindValue(":freq", iter->second);
+		updateUniqSentsQuery.bindValue(":formId", iter.key());
+		updateUniqSentsQuery.bindValue(":freq", iter.value());
 		updateUniqSentsQuery.exec();
 	}
 	QSqlDatabase::database().commit();
@@ -254,7 +260,7 @@ void populateDatabase(char const *resultsFilename,
 	cerr << "done!" << endl << "Populating link table... ";
 	populateLinkTable(formSentencePairs);
 	cerr << "done!" << endl << "Calculating unique sentence frequencies... ";
-	set<uint> formIds = extractFormIds(formSentencePairs);
+	QSet<uint> formIds = extractFormIds(formSentencePairs);
 	calcUniqSents(formIds);
 	cerr << "done!" << endl;
 }
