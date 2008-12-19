@@ -19,19 +19,17 @@ mining database.
 
 Requirements:
 
-* A C++ standard library that includes support for the TR1 unordered_set
-  and unordered_map classes. A recent version of GNU C++ will do fine
-  (tested with g++ 4.3.1). Note that Mac OS X has a very old version of
-  g++ (4.0.1 in Leopard), and will not work, because the unordered_set:erase
-  method does not return an iterator, which is a requirements of TR1.
-  Complain to Apple and/or compile a newer g++/libstdc++ through MacPorts
-  or Fink.
+* A C++ standard library that includes support for the TR1 shared_ptr
+  class. A recent version of GNU C++ will do fine (tested with g++
+  4.0.1 and 4.3.1).
 * Qt 4.x (tested with 4.4.0).
 
 Qt includes a tool for generating native build infrastructure, named
 'qmake'. Executing 'qmake' in the main source directory will generate
 all necessary build files. Subsequently, 'make' can be invoked on most
-UNIX platforms to compile the error miner and viewer.
+UNIX platforms to compile the error miner and viewer. If you want to
+create Makefiles, rather than an Xcode project on Mac OS X, invoke
+qmake with the '-spec macx-g++' option.
 
 To use the error miner, you will need perfect hash automata of the
 types occurring in parsable and unparsable sentences. These automata
