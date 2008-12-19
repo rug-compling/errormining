@@ -7,14 +7,14 @@ bool FormProbComp::operator()(Form const &lhs, Form const &rhs) const
 	return lhs.suspicion() > rhs.suspicion();
 }
 
-size_t FormPtrHash::operator()(Form const *form) const
+uint errormining::qHash(FormPtr const &formPtr)
 {
 	size_t seed = 0;
 
 	// Hash a vector of strings, the hash combination method is derrived
 	// from Boost hash_combine().
-	for (vector<int>::const_iterator iter = form->ngram().begin();
-			iter != form->ngram().end(); ++iter)
+	for (vector<int>::const_iterator iter = formPtr.value->ngram().begin();
+			iter != formPtr.value->ngram().end(); ++iter)
 		seed ^= *iter + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 
 	return seed;
@@ -24,7 +24,7 @@ void Miner::destroy()
 {
 	for (FormPtrSet::const_iterator formIter = d_forms->begin();
 			formIter != d_forms->end(); ++formIter)
-		delete *formIter;
+		delete formIter->value;
 }
 
 void Miner::calculateInitialFormSuspicions(double suspThreshold)
@@ -67,9 +67,9 @@ void Miner::calculateInitialFormSuspicions(double suspThreshold)
 		for (FormPtrSet::const_iterator iter = d_forms->begin();
 				iter != d_forms->end(); ++iter)
 		{
-			double smoothedSuspicion = smootheSuspicion((*iter)->suspicion(),
-					avgSuspicion, (*iter)->nSuspObservations());
-			const_cast<Form *>(*iter)->setSuspicion(smoothedSuspicion);
+			double smoothedSuspicion = smootheSuspicion(iter->value->suspicion(),
+					avgSuspicion, iter->value->nSuspObservations());
+			iter->value->setSuspicion(smoothedSuspicion);
 		}
 	}
 
@@ -132,9 +132,9 @@ double Miner::calculateFormSuspicions(double suspThreshold)
 				iter != d_forms->end(); ++iter)
 		{
 			// Smoothe the suspicion.
-			double smoothedSuspicion = smootheSuspicion((*iter)->suspicion(),
-					avgSuspicion, (*iter)->nSuspObservations());
-			const_cast<Form *>(*iter)->setSuspicion(smoothedSuspicion);
+			double smoothedSuspicion = smootheSuspicion(iter->value->suspicion(),
+					avgSuspicion, iter->value->nSuspObservations());
+			iter->value->setSuspicion(smoothedSuspicion);
 		}
 	}
 
@@ -178,7 +178,7 @@ set<Form, FormProbComp> Miner::forms() const
 	// Copy all forms to a set that is ordered by descending suspicion.
 	for (FormPtrSet::const_iterator formIter = d_forms->begin();
 			formIter != d_forms->end(); ++formIter)
-		forms.insert(**formIter);
+		forms.insert(*(formIter->value));
 
 	return forms;
 }
@@ -260,10 +260,11 @@ void Miner::newSuspForm(IntVecIterPair const &bestNgram, Sentence *sentence)
 	vector<int> bestNgramVec(bestNgram.first, bestNgram.second);
 
 	Form form(bestNgramVec);
+	FormPtr formPtr = {&form};
 
 	// Check whether we have seen the current form before, if not, we'll
 	// want to add it if the form is of interest to us.
-	FormPtrSet::const_iterator formIter = d_forms->find(&form);
+	FormPtrSet::const_iterator formIter = d_forms->find(formPtr);
 	if (formIter == d_forms->end()) {
 		vector<int> parsableBestNgram = unparsableToParsableHashCodes(
 				bestNgramVec.begin(), bestNgramVec.end());
@@ -275,14 +276,15 @@ void Miner::newSuspForm(IntVecIterPair const &bestNgram, Sentence *sentence)
 					parsableBestNgram.end());
 		size_t unsuspObservations = distance(goodIters.first, goodIters.second);
 
-		d_forms->insert(new Form(bestNgramVec, 0.0, unsuspObservations));
-		formIter = d_forms->find(&form);
+		formPtr.value = new Form(bestNgramVec, 0.0, unsuspObservations);
+		d_forms->insert(formPtr);
+		formIter = d_forms->find(formPtr);
 	}
 
 	// Store observations of the Form in a sentence-representation. This
 	// is used by the miner to calculate observations suspicions.
-	sentence->addObservedForm(*formIter);
-	(*formIter)->newSuspObservation();
+	sentence->addObservedForm(formIter->value);
+	formIter->value->newSuspObservation();
 }
 
 double Miner::ngramRatio(
@@ -292,10 +294,10 @@ double Miner::ngramRatio(
 	// See if we have cached the ratio if this is a unigram.
 	if (distance(ngramBegin, ngramEnd) == 1)
 	{
-		unordered_map<int, double>::const_iterator iter =
+		QHash<int, double>::const_iterator iter =
 			d_unigramRatioCache->find(*ngramBegin);
 		if (iter != d_unigramRatioCache->end())
-			return iter->second;
+			return iter.value();
 	}
 
 	// Since a different hashing function is used for parsable sentences,
@@ -336,7 +338,7 @@ void Miner::removeLowSuspForms(double suspThreshold)
 	FormPtrSet::iterator iter = d_forms->begin();
 	while (iter != d_forms->end())
 	{
-		if ((*iter)->suspicion() < suspThreshold)
+		if (iter->value->suspicion() < suspThreshold)
 			iter = d_forms->erase(iter);
 		else
 			++iter;

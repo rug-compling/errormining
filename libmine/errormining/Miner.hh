@@ -9,10 +9,10 @@
 #include <utility>
 #include <vector>
 
-#include <tr1/functional>
 #include <tr1/memory>
-#include <tr1/unordered_map>
-#include <tr1/unordered_set>
+
+#include <QHash>
+#include <QSet>
 
 #include "Form.hh"
 #include "HashAutomaton.hh"
@@ -25,11 +25,24 @@ namespace errormining
 {
 
 /**
- * Function objects of this type compare two forms that are pointed to.
- */
-struct FormPtrComp {
-	bool operator()(Form const * lhs, Form const * rhs) const;
+  * FormPtr is a wrapper for pointers to Forms. QHash requires overloading
+  * of operator== (which we'll want in this case, because we don't want to
+  * compare addresses). But we can't overload operators for plain pointers.
+  */
+struct FormPtr {
+	Form *value;
 };
+
+/**
+ * Comparison for form pointers. This will compare the forms, rather than
+ * their addresses.
+ */
+bool operator==(FormPtr lhs, FormPtr rhs);
+
+/**
+ * Hash a form by its n-gram value.
+ */
+uint qHash(FormPtr const &formPtr);
 
 /**
  * Function objects of this type compare two forms by their suspicion.
@@ -41,20 +54,12 @@ struct FormProbComp {
 };
 
 /**
- * Function objects of this type can hash Forms that are pointed to.
- */
-struct FormPtrHash : std::unary_function<Form const *, std::size_t>
-{
-	std::size_t operator()(Form const *form) const;
-};
-
-/**
  * Function objects of this type will add the suspicion of a form to
  * a (accumulated) value. To be used with std::accumulator().
  */
-struct FormPtrSuspSum : std::binary_function<double, double, Form const *>
+struct FormPtrSuspSum : std::binary_function<double, double, FormPtr>
 {
-	double operator()(double acc, Form const *form) const;
+	double operator()(double acc, FormPtr const formPtr) const;
 };
 
 /**
@@ -91,9 +96,9 @@ public:
 		d_badSuffixArray(unparsableSuffixArray), d_n(n),
 		d_ngramExpansion(ngramExpansion), d_expansionFactorAlpha(expansionFactorAlpha),
 		d_smoothing(smoothing), d_smoothingBeta(smoothingBeta),
-		d_forms(new std::tr1::unordered_set<Form *, FormPtrHash, FormPtrComp>()),
+		d_forms(new QSet<FormPtr>()),
 		d_sentences(new std::vector<Sentence>()),
-		d_unigramRatioCache(new std::tr1::unordered_map<int, double>()) {}
+		d_unigramRatioCache(new QHash<int, double>()) {}
 
 	~Miner();
 
@@ -142,7 +147,7 @@ private:
 			std::vector<int>::const_iterator const &unparsableNgramBegin,
 			std::vector<int>::const_iterator const &unparsableNgramEnd) const;
 
-	typedef std::tr1::unordered_set<Form *, FormPtrHash, FormPtrComp> FormPtrSet;
+	typedef QSet<FormPtr> FormPtrSet;
 
 	std::tr1::shared_ptr<HashAutomaton const> d_parsableHashAutomaton;
 	std::tr1::shared_ptr<HashAutomaton const> d_unparsableHashAutomaton;
@@ -155,18 +160,17 @@ private:
 	double d_smoothingBeta;
 	std::auto_ptr<FormPtrSet> d_forms;
 	std::auto_ptr<std::vector<Sentence> > d_sentences;
-	std::auto_ptr<std::tr1::unordered_map<int, double> > d_unigramRatioCache;
+	std::auto_ptr<QHash<int, double> > d_unigramRatioCache;
 };
 
-inline bool FormPtrComp::operator()(Form const *lhs,
-	Form const *rhs) const
+inline bool operator==(FormPtr lhs, FormPtr rhs)
 {
-	return *lhs == *rhs;
+	return *lhs.value == *rhs.value;
 }
 
-inline double FormPtrSuspSum::operator()(double acc, Form const *form) const
+inline double FormPtrSuspSum::operator()(double acc, FormPtr const formPtr) const
 {
-	return acc + form->suspicion();
+	return acc + formPtr.value->suspicion();
 }
 
 inline Miner::~Miner()

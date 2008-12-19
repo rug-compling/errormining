@@ -2,8 +2,8 @@ include('../projects.pri')
 
 TEMPLATE = app
 TARGET = ../bin/mine
-CONFIG += debug_and_release warn_on
-QT =
+CONFIG += qt debug_and_release warn_on
+QT = core
 
 SOURCES += mine.cpp
 

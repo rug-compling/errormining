@@ -1,7 +1,7 @@
 TEMPLATE = lib
 TARGET = ../lib/mine
-CONFIG += static debug_and_release warn_on
-QT =
+CONFIG += qt static debug_and_release warn_on
+QT = core
 QMAKE_CXXFLAGS += -Wextra -I. -DFLEXIBLE -DNUMBERS -DSTOPBIT -DNEXTBIT \
 	-DMORPH_INFIX -DPOOR_MORPH -DLOOSING_RPM -DMULTICOLUMN
 
