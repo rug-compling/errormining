@@ -13,6 +13,7 @@
 
 #include <QHash>
 #include <QSet>
+#include <QVector>
 
 #include "Form.hh"
 #include "HashAutomaton.hh"
@@ -30,6 +31,7 @@ namespace errormining
   * compare addresses). But we can't overload operators for plain pointers.
   */
 struct FormPtr {
+	FormPtr(Form *newValue) : value(newValue) {}
 	Form *value;
 };
 
@@ -51,6 +53,12 @@ uint qHash(FormPtr const &formPtr);
  */
 struct FormProbComp {
 	bool operator()(Form const &lhs, Form const &rhs) const;
+};
+
+struct SuspAtLeast {
+	SuspAtLeast(double newSuspicion) : suspicion(newSuspicion) {}
+	double operator()(FormPtr const &formPtr);
+	double suspicion;
 };
 
 /**
@@ -97,7 +105,7 @@ public:
 		d_ngramExpansion(ngramExpansion), d_expansionFactorAlpha(expansionFactorAlpha),
 		d_smoothing(smoothing), d_smoothingBeta(smoothingBeta),
 		d_forms(new QSet<FormPtr>()),
-		d_sentences(new std::vector<Sentence>()),
+		d_sentences(new QVector<Sentence>()),
 		d_unigramRatioCache(new QHash<int, double>()) {}
 
 	~Miner();
@@ -159,13 +167,18 @@ private:
 	bool d_smoothing;
 	double d_smoothingBeta;
 	std::auto_ptr<FormPtrSet> d_forms;
-	std::auto_ptr<std::vector<Sentence> > d_sentences;
+	std::auto_ptr<QVector<Sentence> > d_sentences;
 	std::auto_ptr<QHash<int, double> > d_unigramRatioCache;
 };
 
 inline bool operator==(FormPtr lhs, FormPtr rhs)
 {
 	return *lhs.value == *rhs.value;
+}
+
+inline double SuspAtLeast::operator()(FormPtr const &formPtr)
+{
+	return formPtr.value->suspicion() > suspicion;
 }
 
 inline double FormPtrSuspSum::operator()(double acc, FormPtr const formPtr) const

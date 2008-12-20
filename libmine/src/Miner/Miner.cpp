@@ -29,10 +29,10 @@ void Miner::destroy()
 
 void Miner::calculateInitialFormSuspicions(double suspThreshold)
 {
-	map<Form const *, double> formSuspSums;
+	QHash<Form *, double> formSuspSums;
 
 	// Calculate the initial observation suspicions.
-	for (vector<Sentence>::const_iterator sentenceIter = d_sentences->begin();
+	for (QVector<Sentence>::const_iterator sentenceIter = d_sentences->begin();
 		sentenceIter != d_sentences->end(); ++sentenceIter)
 	{
 		for (Sentence::const_iterator formIter = sentenceIter->begin();
@@ -42,20 +42,20 @@ void Miner::calculateInitialFormSuspicions(double suspThreshold)
 			// the observations within a sentence.
 			double suspicion = sentenceIter->error() /
 				sentenceIter->observedForms().size();
-			formSuspSums[*formIter] += suspicion;
+			formSuspSums[const_cast<Form *>(*formIter)] += suspicion;
 		}
 	}
 
 	// Calculate the initial form suspicions.
-	for (map<Form const *, double>::const_iterator formIter =
+	for (QHash<Form *, double>::const_iterator formIter =
 		formSuspSums.begin(); formIter != formSuspSums.end(); ++formIter)
 	{
 		// The suspicion of a form is the average of all suspicions of
 		// observations of the form. Since all observations within parsable
 		// sentences have a suspicion of 0.0, they don't add to the sum,
 		// only the total number of observations.
-		double suspicion = formIter->second / formIter->first->nSuspObservations();
-		const_cast<Form *>(formIter->first)->setSuspicion(suspicion);
+		double suspicion = formIter.value() / formIter.key()->nSuspObservations();
+		formIter.key()->setSuspicion(suspicion);
 	}
 
 	if (d_smoothing)
@@ -83,11 +83,11 @@ void Miner::calculateInitialFormSuspicions(double suspThreshold)
 
 double Miner::calculateFormSuspicions(double suspThreshold)
 {
-	map<Form const *, double> formSuspSums;
-	map<Form const *, double> oldSusps;
+	QHash<Form *, double> formSuspSums;
+	QHash<Form *, double> oldSusps;
 
 	// Calculate suspicions of observations of a form within a sentence.
-	for (vector<Sentence>::const_iterator sentenceIter = d_sentences->begin();
+	for (QVector<Sentence>::const_iterator sentenceIter = d_sentences->begin();
 		sentenceIter != d_sentences->end(); ++sentenceIter)
 	{
 		double sentenceSuspSum = 0.0;
@@ -104,21 +104,21 @@ double Miner::calculateFormSuspicions(double suspThreshold)
 			// the form with sentence-level normalization.
 			double suspicion = sentenceIter->error() *
 				((*formIter)->suspicion() / sentenceSuspSum);
-			formSuspSums[*formIter] += suspicion;
+			formSuspSums[const_cast<Form *>(*formIter)] += suspicion;
 		}
 	}
 
-	for (map<Form const *, double>::const_iterator formIter =
+	for (QHash<Form *, double>::const_iterator formIter =
 		formSuspSums.begin(); formIter != formSuspSums.end(); ++formIter)
 	{
 		// The suspicion of a form is the average of all suspicions of
 		// observations of the form. Since all observations within parsable
 		// sentences have a suspicion of 0.0, they don't add to the sum,
 		// only the total number of observations.
-		double suspicion = formIter->second / formIter->first->nObservations();
+		double suspicion = formIter.value() / formIter.key()->nObservations();
 
-		oldSusps[formIter->first] = formIter->first->suspicion();
-		const_cast<Form *>(formIter->first)->setSuspicion(suspicion);
+		oldSusps[formIter.key()] = formIter.key()->suspicion();
+		formIter.key()->setSuspicion(suspicion);
 	}
 
 	if (d_smoothing)
@@ -142,10 +142,10 @@ double Miner::calculateFormSuspicions(double suspThreshold)
 	// the highest delta that we have seen. The caller can use the highest
 	// delta of a learning cycle to determine when to stop mining.
 	double maxDelta = 0.0;
-	for (map<Form const *, double>::const_iterator iter = oldSusps.begin();
+	for (QHash<Form *, double>::const_iterator iter = oldSusps.begin();
 			iter != oldSusps.end(); ++iter)
 	{
-		double delta = abs(iter->second - iter->first->suspicion());
+		double delta = abs(iter.value() - iter.key()->suspicion());
 		if (delta > maxDelta)
 			maxDelta = delta;
 	}
@@ -260,7 +260,7 @@ void Miner::newSuspForm(IntVecIterPair const &bestNgram, Sentence *sentence)
 	vector<int> bestNgramVec(bestNgram.first, bestNgram.second);
 
 	Form form(bestNgramVec);
-	FormPtr formPtr = {&form};
+	FormPtr formPtr(&form);
 
 	// Check whether we have seen the current form before, if not, we'll
 	// want to add it if the form is of interest to us.
@@ -326,7 +326,7 @@ double Miner::ngramRatio(
 void Miner::removeLowSuspForms(double suspThreshold)
 {
 	// Remove all observations of a form that have a near-zero suspicion.
-	for (vector<Sentence>::iterator sentenceIter = d_sentences->begin();
+	for (QVector<Sentence>::iterator sentenceIter = d_sentences->begin();
 		sentenceIter != d_sentences->end(); ++sentenceIter)
 	{
 		Sentence &sentence = *sentenceIter;
@@ -343,6 +343,7 @@ void Miner::removeLowSuspForms(double suspThreshold)
 		else
 			++iter;
 	}
+	//blockingFilter(d_forms, SuspAtLeast(suspThreshold));
 }
 
 double Miner::smootheSuspicion(double suspicion, double avgSuspicion,

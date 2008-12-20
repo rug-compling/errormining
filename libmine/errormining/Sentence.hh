@@ -23,7 +23,7 @@ public:
 	 * @param error The error rate of the sentence, typically 0.0 (parsable)
 	 *  or 1.0 (unparsable).
 	 */
-	Sentence(double error) : d_error(error),
+	Sentence(double error = 0.0) : d_error(error),
 		d_forms(new std::vector<Form const *>()) {}
 
 	Sentence(Sentence const &other);
