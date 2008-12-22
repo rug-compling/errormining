@@ -2,7 +2,7 @@ TEMPLATE = lib
 TARGET = ../lib/mine
 CONFIG += qt static debug_and_release warn_on
 QT = core
-QMAKE_CXXFLAGS += -Wextra -I. -DFLEXIBLE -DNUMBERS -DSTOPBIT -DNEXTBIT \
+QMAKE_CXXFLAGS += -O2 -Wextra -I. -DFLEXIBLE -DNUMBERS -DSTOPBIT -DNEXTBIT \
 	-DMORPH_INFIX -DPOOR_MORPH -DLOOSING_RPM -DMULTICOLUMN
 
 SOURCES=fadd/fadd.cpp src/Form/Form.cpp \
