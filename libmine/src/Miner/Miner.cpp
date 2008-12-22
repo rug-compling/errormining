@@ -160,41 +160,9 @@ double Miner::calculateFormSuspicions(double suspThreshold)
 	return maxDelta;
 }
 
-double Miner::expansionFactor(std::vector<int>::const_iterator const &ngramBegin,
-		std::vector<int>::const_iterator const &ngramEnd) const
+Sentence Miner::expandNgrams(double error, std::vector<int> const &hashedTokens)
 {
-	SuffixArray<int>::IterPair badIters = d_badSuffixArray->find(ngramBegin,
-			ngramEnd);
-	size_t badFreq = distance(badIters.first, badIters.second);
-
-	return 1 + exp(-d_expansionFactorAlpha * static_cast<double>(badFreq));
-}
-
-
-set<Form, FormProbComp> Miner::forms() const
-{
-	set<Form, FormProbComp> forms;
-
-	// Copy all forms to a set that is ordered by descending suspicion.
-	for (FormPtrSet::const_iterator formIter = d_forms->begin();
-			formIter != d_forms->end(); ++formIter)
-		forms.insert(*(formIter->value));
-
-	return forms;
-}
-
-void Miner::handleSentence(vector<string> const &tokens, double error)
-{
-	// The prescanner can give the necessary frequency information for
-	// occurances of forms in parsable sentences.
-	if (error == 0.0)
-		return;
-
 	Sentence sentence(error);
-
-	vector<int> hashedTokens;
-	transform(tokens.begin(), tokens.end(), back_inserter(hashedTokens),
-			*d_unparsableHashAutomaton);
 
 	for (vector<int>::const_iterator iter = hashedTokens.begin();
 		iter + (d_n - 1) < hashedTokens.end(); ++iter)
@@ -242,7 +210,45 @@ void Miner::handleSentence(vector<string> const &tokens, double error)
 		newSuspForm(bestNgram, &sentence);
 	}
 
-	d_sentences->push_back(sentence);
+	return sentence;
+}
+
+
+double Miner::expansionFactor(std::vector<int>::const_iterator const &ngramBegin,
+		std::vector<int>::const_iterator const &ngramEnd) const
+{
+	SuffixArray<int>::IterPair badIters = d_badSuffixArray->find(ngramBegin,
+			ngramEnd);
+	size_t badFreq = distance(badIters.first, badIters.second);
+
+	return 1 + exp(-d_expansionFactorAlpha * static_cast<double>(badFreq));
+}
+
+
+set<Form, FormProbComp> Miner::forms() const
+{
+	set<Form, FormProbComp> forms;
+
+	// Copy all forms to a set that is ordered by descending suspicion.
+	for (FormPtrSet::const_iterator formIter = d_forms->begin();
+			formIter != d_forms->end(); ++formIter)
+		forms.insert(*(formIter->value));
+
+	return forms;
+}
+
+void Miner::handleSentence(vector<string> const &tokens, double error)
+{
+	// The prescanner can give the necessary frequency information for
+	// occurances of forms in parsable sentences.
+	if (error == 0.0)
+		return;
+
+	vector<int> hashedTokens;
+	transform(tokens.begin(), tokens.end(), back_inserter(hashedTokens),
+		*d_unparsableHashAutomaton);
+
+	d_sentences->push_back(expandNgrams(error, hashedTokens));
 }
 
 void Miner::mine(double threshold, double suspThreshold)

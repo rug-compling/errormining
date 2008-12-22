@@ -145,6 +145,7 @@ private:
 	double calculateFormSuspicions(double suspThreshold = 0.0);
 	double expansionFactor(std::vector<int>::const_iterator const &ngramBegin,
 			std::vector<int>::const_iterator const &ngramEnd) const;
+	Sentence expandNgrams(double error, std::vector<int> const &hashedTokens);
 	void newSuspForm(IntVecIterPair const &bestNgram, Sentence *sentence);
 	double ngramRatio(std::vector<int>::const_iterator const &ngramBegin,
 			std::vector<int>::const_iterator const &ngramEnd) const;
