@@ -9,11 +9,11 @@ bool FormProbComp::operator()(Form const &lhs, Form const &rhs) const
 
 uint errormining::qHash(FormPtr const &formPtr)
 {
-	size_t seed = 0;
+	size_t seed = formPtr.value->ngram()[0];
 
 	// Hash a vector of strings, the hash combination method is derrived
 	// from Boost hash_combine().
-	for (vector<int>::const_iterator iter = formPtr.value->ngram().begin();
+	for (vector<int>::const_iterator iter = formPtr.value->ngram().begin() + 1;
 			iter != formPtr.value->ngram().end(); ++iter)
 		seed ^= *iter + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 
