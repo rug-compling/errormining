@@ -2,8 +2,8 @@ TEMPLATE = lib
 TARGET = ../lib/mine
 CONFIG += qt static debug_and_release warn_on
 QT = core
-QMAKE_CXXFLAGS += -O2 -Wextra -I. -DFLEXIBLE -DNUMBERS -DSTOPBIT -DNEXTBIT \
-	-DMORPH_INFIX -DPOOR_MORPH -DLOOSING_RPM -DMULTICOLUMN
+QMAKE_CXXFLAGS += -O2 -Wall -Wextra -I. -DFLEXIBLE -DNUMBERS -DSTOPBIT \
+	-DNEXTBIT -DMORPH_INFIX -DPOOR_MORPH -DLOOSING_RPM -DMULTICOLUMN
 
 SOURCES=fadd/fadd.cpp src/Form/Form.cpp \
 	src/HashAutomaton/HashAutomaton.cpp src/HashedCorpus/HashedCorpus.cpp \
@@ -28,6 +28,4 @@ HEADERS+=src/Observable/Observable.ih src/HashedCorpus/HashedCorpus.ih \
 	src/HashAutomaton/HashAutomaton.ih src/SuffixArray/SuffixArray.ih \
 	src/Miner/Miner.ih src/Form/Form.ih src/util/ssort/ssort.ih
 
-mac {
-	CONFIG -= app_bundle
-}
+mac:CONFIG -= app_bundle
