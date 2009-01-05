@@ -17,8 +17,7 @@ vector<size_t> const *SuffixArray<int>::genSuffixArray(
 			suffixArray->push_back(i);
 
 		// Sort the suffix array.
-		SuffixCompare suffixCompare(&data);
-		sort(suffixArray->begin(), suffixArray->end(), suffixCompare);
+		sort(suffixArray->begin(), suffixArray->end(), d_compareFun);
 
 		return suffixArray;
 	}
