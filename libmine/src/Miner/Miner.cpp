@@ -32,7 +32,7 @@ void Miner::calculateInitialFormSuspicions(double suspThreshold)
 	QHash<Form *, double> formSuspSums;
 
 	// Calculate the initial observation suspicions.
-	for (QLinkedList<Sentence>::const_iterator sentenceIter = d_sentences->begin();
+	for (list<Sentence>::const_iterator sentenceIter = d_sentences->begin();
 		sentenceIter != d_sentences->end(); ++sentenceIter)
 	{
 		for (Sentence::const_iterator formIter = sentenceIter->begin();
@@ -87,7 +87,7 @@ double Miner::calculateFormSuspicions(double suspThreshold)
 	QHash<Form *, double> oldSusps;
 
 	// Calculate suspicions of observations of a form within a sentence.
-	for (QLinkedList<Sentence>::const_iterator sentenceIter = d_sentences->begin();
+	for (list<Sentence>::const_iterator sentenceIter = d_sentences->begin();
 		sentenceIter != d_sentences->end(); ++sentenceIter)
 	{
 		double sentenceSuspSum = 0.0;
@@ -332,7 +332,7 @@ double Miner::ngramRatio(
 void Miner::removeLowSuspForms(double suspThreshold)
 {
 	// Remove all observations of a form that have a near-zero suspicion.
-	for (QLinkedList<Sentence>::iterator sentenceIter = d_sentences->begin();
+	for (list<Sentence>::iterator sentenceIter = d_sentences->begin();
 		sentenceIter != d_sentences->end(); ++sentenceIter)
 	{
 		Sentence &sentence = *sentenceIter;

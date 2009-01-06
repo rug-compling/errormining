@@ -1,13 +1,13 @@
 #include <algorithm>
 #include <cmath>
 #include <iterator>
+#include <list>
 #include <memory>
 #include <set>
 #include <string>
 #include <vector>
 
 #include <QHash>
-#include <QLinkedList>
 
 #include <errormining/Form.hh>
 #include <errormining/Miner.hh>

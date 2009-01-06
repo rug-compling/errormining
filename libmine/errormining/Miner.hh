@@ -2,6 +2,7 @@
 #define MINER_HH_
 
 #include <functional>
+#include <list>
 #include <memory>
 #include <numeric>
 #include <set>
@@ -12,7 +13,6 @@
 #include <tr1/memory>
 
 #include <QHash>
-#include <QLinkedList>
 #include <QSet>
 
 #include "Form.hh"
@@ -105,7 +105,7 @@ public:
 		d_ngramExpansion(ngramExpansion), d_expansionFactorAlpha(expansionFactorAlpha),
 		d_smoothing(smoothing), d_smoothingBeta(smoothingBeta),
 		d_forms(new QSet<FormPtr>()),
-		d_sentences(new QLinkedList<Sentence>()),
+		d_sentences(new std::list<Sentence>()),
 		d_unigramRatioCache(new QHash<int, double>()) {}
 
 	~Miner();
@@ -168,7 +168,7 @@ private:
 	bool d_smoothing;
 	double d_smoothingBeta;
 	std::auto_ptr<FormPtrSet> d_forms;
-	std::auto_ptr<QLinkedList<Sentence> > d_sentences;
+	std::auto_ptr<std::list<Sentence> > d_sentences;
 	std::auto_ptr<QHash<int, double> > d_unigramRatioCache;
 };
 
