@@ -13,7 +13,6 @@
 #include <errormining/Miner.hh>
 #include <errormining/Sentence.hh>
 #include <errormining/SuffixArray.hh>
-#include <errormining/SumSentenceSuspicions.hh>
 
 using namespace std;
 using namespace std::tr1;
