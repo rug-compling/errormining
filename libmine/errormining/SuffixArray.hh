@@ -19,7 +19,7 @@
  * more elegantly, relying more on STL and Boost. Unfortunately, it was
  * too slow on larger arrays to be practical (the iterators and iterator
  * transformations made it slow). I have decided to reimplement this in
- * with a more traditional using two vectors and a simple binary search
+ * a more fashing traditional using two vectors and a simple binary search
  * function that is aware of the indirection that is applied.
  */
 
@@ -211,15 +211,21 @@ inline bool SuffixCompare<T>::operator()(size_t i, size_t j) const
 template <typename T>
 inline bool SuffixCompare<T>::operator()(size_t i, std::vector<T> const &value) const
 {
+	typename std::vector<T>::const_iterator subSequenceEnd =
+		std::min(d_sequencePtr->begin() + i + value.size(), d_sequencePtr->end());
+
 	return lexicographical_compare(d_sequencePtr->begin() + i,
-		d_sequencePtr->begin() + i + value.size(), value.begin(), value.end());
+		subSequenceEnd, value.begin(), value.end());
 }
 
 template <typename T>
 inline bool SuffixCompare<T>::operator()(std::vector<T> const &value, size_t i) const
 {
+	typename std::vector<T>::const_iterator subSequenceEnd =
+		std::min(d_sequencePtr->begin() + i + value.size(), d_sequencePtr->end());
+
 	return lexicographical_compare(value.begin(), value.end(),
-		d_sequencePtr->begin() + i, d_sequencePtr->begin() + i + value.size());
+		d_sequencePtr->begin() + i, subSequenceEnd);
 }
 
 }
