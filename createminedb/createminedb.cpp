@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -74,16 +75,19 @@ size_t addResults(char const *resultsFilename)
 	{
 		QString line = resultsFile.readLine().trimmed();
 		QStringList lineParts = line.split(" ");
-		
+
+		if (lineParts.size() < 4)
+			throw runtime_error("Malformed line in result file.");
+
 		// Extract and bind information.
 		query.bindValue(":suspFreq", lineParts.takeLast());
 		query.bindValue(":freq", lineParts.takeLast());
 		query.bindValue(":suspicion", lineParts.takeLast());
 		query.bindValue(":form", lineParts.join(" "));
-		
+
 		if (static_cast<size_t>(lineParts.size()) > longestNgram)
 			longestNgram = lineParts.size();
-		
+
 		query.exec();
 	}
 
