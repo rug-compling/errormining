@@ -345,11 +345,14 @@ void Miner::removeLowSuspForms(double suspThreshold)
 	while (iter != d_forms->end())
 	{
 		if (iter->value->suspicion() < suspThreshold)
+		{
+			FormPtr formPtr = *iter;
+			delete formPtr.value;
 			iter = d_forms->erase(iter);
+		}
 		else
 			++iter;
 	}
-	//blockingFilter(d_forms, SuspAtLeast(suspThreshold));
 }
 
 double Miner::smootheSuspicion(double suspicion, double avgSuspicion,
