@@ -29,6 +29,9 @@ bool openDatabase(QString const &dbFilename)
 
 void createTables()
 {
+	QSqlQuery cacheSize("PRAGMA default_cache_size = 10000");
+	cacheSize.exec();
+
 	QSqlDatabase::database().transaction();
 	QSqlQuery createFormsTableQuery("CREATE TABLE forms ("
 		"form TEXT, suspicion REAL, freq INTEGER, suspFreq INTEGER, "
