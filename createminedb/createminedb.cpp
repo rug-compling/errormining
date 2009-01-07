@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
-#include <vector>
+#include <list>
 
 #include <QCoreApplication>
 #include <QFile>
@@ -115,7 +115,7 @@ void addSentences(char const *filename, bool unparsable)
 	}
 }
 
-vector<pair<uint, uint> > findFormSentencePairs(int n)
+list<pair<uint, uint> > findFormSentencePairs(int n)
 {
 	QHash<QString, uint> formIds;
 	{
@@ -131,7 +131,7 @@ vector<pair<uint, uint> > findFormSentencePairs(int n)
 		}
 	}
 
-	vector<pair<uint, uint> > formSentencePairs;
+	list<pair<uint, uint> > formSentencePairs;
 	{
 		// Select all sentences.
 		QSqlQuery sentenceQuery("SELECT rowid, sentence FROM sentences");
@@ -169,7 +169,7 @@ vector<pair<uint, uint> > findFormSentencePairs(int n)
 	return formSentencePairs;
 }
 
-void populateLinkTable(vector<pair<uint, uint> > const &formSentencePairs)
+void populateLinkTable(list<pair<uint, uint> > const &formSentencePairs)
 {
 	// Prepare query for insertion into the link table.
 	QSqlQuery insertFormSentenceQuery;
@@ -178,7 +178,7 @@ void populateLinkTable(vector<pair<uint, uint> > const &formSentencePairs)
 
 	// Insert link table pairs.
 	QSqlDatabase::database().transaction();
-	for (vector<pair<uint, uint> >::const_iterator iter = formSentencePairs.begin();
+	for (list<pair<uint, uint> >::const_iterator iter = formSentencePairs.begin();
 		iter != formSentencePairs.end(); ++iter)
 	{
 		insertFormSentenceQuery.bindValue(":formId", iter->first);
@@ -198,11 +198,11 @@ void populateLinkTable(vector<pair<uint, uint> > const &formSentencePairs)
 
 // Extract the set of form IDs, from the form-sentence link table.
 QSet<uint> extractFormIds(
-	vector<pair<uint, uint> > const &formSentencePairs)
+	list<pair<uint, uint> > const &formSentencePairs)
 {
 	QSet<uint> formIds;
 
-	for (vector<pair<uint, uint> >::const_iterator iter =
+	for (list<pair<uint, uint> >::const_iterator iter =
 			formSentencePairs.begin(); iter != formSentencePairs.end();
 			++iter)
 		formIds.insert(iter->first);
@@ -260,7 +260,7 @@ void populateDatabase(char const *resultsFilename,
 	if (parsableFilename != 0)
 		addSentences(parsableFilename, false);
 	cerr << "done!" << endl << "Finding form-sentence links... ";
-	vector<pair<uint, uint> > formSentencePairs = findFormSentencePairs(n);
+	list<pair<uint, uint> > formSentencePairs = findFormSentencePairs(n);
 	cerr << "done!" << endl << "Populating link table... ";
 	populateLinkTable(formSentencePairs);
 	cerr << "done!" << endl << "Calculating unique sentence frequencies... ";
