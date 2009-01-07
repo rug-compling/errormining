@@ -41,6 +41,7 @@ void usage(string const &programName)
 			"  -e val\tEnable use of an expansion factor, and set alpha to val" << endl <<
 			"  -f freq\tShow forms observed >= freq" << endl <<
 			"  -n n\t\tUse ngrams of length n" << endl <<
+			"  -m m\t\tCreate ngrams upto length m (only used with -c)" << endl <<
 			"  -o alg\tSort algorithm (stlsort or ssort, default: ssort)" << endl <<
 			"  -s t\t\tSuspicion threshold for excluding suspicious observations" << endl <<
 			"  -t t\t\tThreshold for determining the fixed-point" << endl <<
@@ -129,9 +130,9 @@ int main(int argc, char *argv[])
 
 	// Create a miner, and register it as a handler for the sentence reader.
 	Miner miner(parsableHashAutomaton, unparsableHashAutomaton, goodSuffixArray,
-			badSuffixArray, programOptions->n(), programOptions->ngramExpansion(),
-			programOptions->expansionFactorAlpha(),	programOptions->smoothing(),
-			programOptions->smoothingBeta());
+			badSuffixArray, programOptions->n(), programOptions->m(),
+			programOptions->ngramExpansion(), programOptions->expansionFactorAlpha(),
+			programOptions->smoothing(), programOptions->smoothingBeta());
 	reader.addHandler(&miner);
 
 	// Observe the mining process, if we want verbose output.

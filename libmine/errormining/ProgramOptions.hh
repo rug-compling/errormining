@@ -19,6 +19,7 @@ public:
 	std::vector<std::string> const &arguments() const;
 	double expansionFactorAlpha() const;
 	size_t n() const;
+	size_t m() const;
 	size_t ngramExpansion() const;
 	size_t frequency() const;
 	std::string const &programName() const;
@@ -35,6 +36,7 @@ private:
 
 	std::string d_programName;
 	size_t d_n;
+	size_t d_m;
 	bool d_ngramExpansion;
 	double d_expansionFactorAlpha;
 	size_t d_frequency;
@@ -69,6 +71,11 @@ inline std::vector<std::string> const &ProgramOptions::arguments() const
 inline double ProgramOptions::expansionFactorAlpha() const
 {
 	return d_expansionFactorAlpha;
+}
+
+inline size_t ProgramOptions::m() const
+{
+	return d_m;
 }
 
 inline size_t ProgramOptions::n() const

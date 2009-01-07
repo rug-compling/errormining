@@ -9,7 +9,7 @@ bool FormProbComp::operator()(Form const &lhs, Form const &rhs) const
 
 uint errormining::qHash(FormPtr const &formPtr)
 {
-	size_t seed = formPtr.value->ngram()[0];
+	size_t seed = *formPtr.value->ngram().begin();
 
 	// Hash a vector of strings, the hash combination method is derrived
 	// from Boost hash_combine().
@@ -58,12 +58,15 @@ void Miner::calculateInitialFormSuspicions(double suspThreshold)
 		formIter.key()->setSuspicion(suspicion);
 	}
 
+	// Form suspicion smoothing.
 	if (d_smoothing)
 	{
+		// Calculate the average suspicion.
 		double suspicionSum = accumulate(d_forms->begin(), d_forms->end(), 0.0,
 				FormPtrSuspSum());
 		double avgSuspicion = suspicionSum / d_forms->size();
 
+		// Smoothe the suspicion of all forms.
 		for (FormPtrSet::const_iterator iter = d_forms->begin();
 				iter != d_forms->end(); ++iter)
 		{
@@ -121,6 +124,7 @@ double Miner::calculateFormSuspicions(double suspThreshold)
 		formIter.key()->setSuspicion(suspicion);
 	}
 
+	// Form suspicion smoothing.
 	if (d_smoothing)
 	{
 		// Calculate the average pre-smoothing suspicion for this cycle.
@@ -128,10 +132,10 @@ double Miner::calculateFormSuspicions(double suspThreshold)
 				FormPtrSuspSum());
 		double avgSuspicion = suspicionSum / d_forms->size();
 
+		// Smoothe suspicions.
 		for (FormPtrSet::const_iterator iter = d_forms->begin();
 				iter != d_forms->end(); ++iter)
 		{
-			// Smoothe the suspicion.
 			double smoothedSuspicion = smootheSuspicion(iter->value->suspicion(),
 					avgSuspicion, iter->value->nSuspObservations());
 			iter->value->setSuspicion(smoothedSuspicion);
@@ -160,51 +164,69 @@ double Miner::calculateFormSuspicions(double suspThreshold)
 	return maxDelta;
 }
 
+Sentence Miner::collectNgrams(double error, std::vector<int> const &hashedTokens)
+{
+	Sentence sentence(error);
+
+	// Simple n-gram collection: add all n to m-grams in a given sentence.
+	for (vector<int>::const_iterator iter = hashedTokens.begin();
+		iter + d_n <= hashedTokens.end(); ++iter)
+	{
+		for (size_t len = d_n; len <= d_m; ++len)
+		{
+			if (iter + len > hashedTokens.end())
+				break;
+
+			IntVecIterPair ngram(iter, iter + len);
+			newSuspForm(ngram, &sentence);
+		}
+	}
+
+	return sentence;
+}
+
 Sentence Miner::expandNgrams(double error, std::vector<int> const &hashedTokens)
 {
 	Sentence sentence(error);
 
 	for (vector<int>::const_iterator iter = hashedTokens.begin();
-		iter + (d_n - 1) < hashedTokens.end(); ++iter)
+		iter + d_n <= hashedTokens.end(); ++iter)
 	{
 		// Initially, the best n-gram is the shortest one we start with.
 		// 'Best n-gram' is defined as the n-gram with the highest
 		// unparsable:parsable ratio.
 		IntVecIterPair bestNgram(iter, iter + d_n);
 
-		if (d_ngramExpansion)
+		double bestNgramRatio = ngramRatio(bestNgram.first, bestNgram.second);
+
+		for (vector<int>::const_iterator endIter = iter + d_n + 1;
+			endIter <= hashedTokens.end(); ++endIter)
 		{
-			double bestNgramRatio = ngramRatio(bestNgram.first, bestNgram.second);
+			// Get the n+1-gram, which we will call a m-gram.
+			IntVecIterPair mgram(iter, endIter);
+			double mgramRatio = ngramRatio(mgram.first, mgram.second);
 
-			for (vector<int>::const_iterator endIter = iter + d_n;
-				endIter != hashedTokens.end(); ++endIter)
+			// Get the second n-gram within the current m-gram.
+			IntVecIterPair ngram(iter + 1, endIter);
+
+			// Calculate the expansion factor, if it is senseful.
+			double factor = 1.0;
+			if (d_expansionFactorAlpha != 0.0)
+				factor = expansionFactor(mgram.first, mgram.second);
+
+			// If the m-gram has a worse ratio (in terms of relatively more
+			// occurrances in unparsable sentences), we'll extend the n-gram.
+			// The ratio of 'ngram' is not precalculated - the evaluation is
+			// shortwired if mgramRatio < bestNgramRatio, so we may not
+			// actually need it.
+			if (mgramRatio > factor * bestNgramRatio
+				&& mgramRatio > factor * ngramRatio(ngram.first, ngram.second))
 			{
-				// Get the n+1-gram, which we will call a m-gram.
-				IntVecIterPair mgram(iter, endIter + 1);
-				double mgramRatio = ngramRatio(mgram.first, mgram.second);
-
-				// Get the second n-gram within the current m-gram.
-				IntVecIterPair ngram(iter + 1, endIter + 1);
-
-				// Calculate the expansion factor, if it is senseful.
-				double factor = 1.0;
-				if (d_expansionFactorAlpha != 0.0)
-					factor = expansionFactor(mgram.first, mgram.second);
-
-				// If the m-gram has a worse ratio (in terms of relatively more
-				// occurrances in unparsable sentences), we'll extend the n-gram.
-				// The ratio of 'ngram' is not precalculated - the evaluation is
-				// shortwired if mgramRatio < bestNgramRatio, so we may not
-				// actually need it.
-				if (mgramRatio > factor * bestNgramRatio
-						&& mgramRatio > factor * ngramRatio(ngram.first, ngram.second))
-				{
-					bestNgram = mgram;
-					bestNgramRatio = mgramRatio;
-				}
-				else
-					break;
+				bestNgram = mgram;
+				bestNgramRatio = mgramRatio;
 			}
+			else
+				break;
 		}
 
 		newSuspForm(bestNgram, &sentence);
@@ -248,7 +270,10 @@ void Miner::handleSentence(vector<string> const &tokens, double error)
 	transform(tokens.begin(), tokens.end(), back_inserter(hashedTokens),
 		*d_unparsableHashAutomaton);
 
-	d_sentences->push_back(expandNgrams(error, hashedTokens));
+	if (d_ngramExpansion)
+		d_sentences->push_back(expandNgrams(error, hashedTokens));
+	else
+		d_sentences->push_back(collectNgrams(error, hashedTokens));
 }
 
 void Miner::mine(double threshold, double suspThreshold)

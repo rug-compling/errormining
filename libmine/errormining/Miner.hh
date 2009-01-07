@@ -55,12 +55,6 @@ struct FormProbComp {
 	bool operator()(Form const &lhs, Form const &rhs) const;
 };
 
-struct SuspAtLeast {
-	SuspAtLeast(double newSuspicion) : suspicion(newSuspicion) {}
-	double operator()(FormPtr const &formPtr);
-	double suspicion;
-};
-
 /**
  * Function objects of this type will add the suspicion of a form to
  * a (accumulated) value. To be used with std::accumulator().
@@ -96,12 +90,12 @@ public:
 			std::tr1::shared_ptr<HashAutomaton const> unparsableHashAutomaton,
 			std::tr1::shared_ptr<SuffixArray<int> const > parsableSuffixArray,
 			std::tr1::shared_ptr<SuffixArray<int> const > unparsableSuffixArray,
-			size_t n = 2, bool ngramExpansion = true, double expansionFactorAlpha = 0.0,
-			bool smoothing = true, double smoothingBeta = 0.1) :
+			size_t n = 1, size_t m = 1, bool ngramExpansion = true,
+			double expansionFactorAlpha = 0.0, bool smoothing = true, double smoothingBeta = 0.1) :
 		d_parsableHashAutomaton(parsableHashAutomaton),
 		d_unparsableHashAutomaton(unparsableHashAutomaton),
 		d_goodSuffixArray(parsableSuffixArray),
-		d_badSuffixArray(unparsableSuffixArray), d_n(n),
+		d_badSuffixArray(unparsableSuffixArray), d_n(n), d_m(m),
 		d_ngramExpansion(ngramExpansion), d_expansionFactorAlpha(expansionFactorAlpha),
 		d_smoothing(smoothing), d_smoothingBeta(smoothingBeta),
 		d_forms(new QSet<FormPtr>()),
@@ -138,20 +132,46 @@ private:
 	typedef std::pair<std::vector<int>::const_iterator,
 		std::vector<int>::const_iterator> IntVecIterPair;
 
+	// Implementing a copy constructor and assignment operator does not really seem
+	// worth the effort.
 	Miner(Miner const &other);
 	Miner &operator=(Miner const &other);
+
+	// Form deallocation.
 	void destroy();
+
+	// Perform the first mining cycle.
 	void calculateInitialFormSuspicions(double suspThreshold = 0.0);
+
+	// Perform a mining cycle.
 	double calculateFormSuspicions(double suspThreshold = 0.0);
+
+	// Traditional ngram collections (add all n to m-grams).
+	Sentence collectNgrams(double error, std::vector<int> const &hashedTokens);
+
+	// Calculate the expansion factor of an n-gram.
 	double expansionFactor(std::vector<int>::const_iterator const &ngramBegin,
 			std::vector<int>::const_iterator const &ngramEnd) const;
+
+	// N-gram collection with n-gram expansion.
 	Sentence expandNgrams(double error, std::vector<int> const &hashedTokens);
+
+	// Create a new suspcious form.
 	void newSuspForm(IntVecIterPair const &bestNgram, Sentence *sentence);
+
+	// Calculate 'unparsability' ratio of an n-gram (f_unparsable / f_all).
 	double ngramRatio(std::vector<int>::const_iterator const &ngramBegin,
 			std::vector<int>::const_iterator const &ngramEnd) const;
+
+	// Remove forms with a suspicion below the the specified threshold.
 	void removeLowSuspForms(double suspThreshold);
+
+	// Smoothe a suspicion.
 	double smootheSuspicion(double suspicion, double avgSuspicion,
 			size_t suspFreq) const;
+
+	// Translate a sequence from the unparsable corpus to the parsable corpus. This
+	// is necessary, because both corpera use a different hash automaton.
 	std::vector<int> unparsableToParsableHashCodes(
 			std::vector<int>::const_iterator const &unparsableNgramBegin,
 			std::vector<int>::const_iterator const &unparsableNgramEnd) const;
@@ -163,6 +183,7 @@ private:
 	std::tr1::shared_ptr<SuffixArray<int> const> d_goodSuffixArray;
 	std::tr1::shared_ptr<SuffixArray<int> const> d_badSuffixArray;
 	size_t d_n;
+	size_t d_m;
 	bool d_ngramExpansion;
 	bool d_expansionFactorAlpha;
 	bool d_smoothing;
@@ -175,11 +196,6 @@ private:
 inline bool operator==(FormPtr lhs, FormPtr rhs)
 {
 	return *lhs.value == *rhs.value;
-}
-
-inline double SuspAtLeast::operator()(FormPtr const &formPtr)
-{
-	return formPtr.value->suspicion() > suspicion;
 }
 
 inline double FormPtrSuspSum::operator()(double acc, FormPtr const formPtr) const
