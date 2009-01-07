@@ -5,7 +5,7 @@
 
 #include <unistd.h>
 
-#include <errormining/ProgramOptions.hh>
+#include "ProgramOptions.hh"
 #include <errormining/SuffixArray.hh>
 
 using namespace std;

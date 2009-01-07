@@ -7,10 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "SuffixArray.hh"
-
-namespace errormining
-{
+#include <errormining/SuffixArray.hh>
 
 class ProgramOptions
 {
@@ -25,7 +22,7 @@ public:
 	std::string const &programName() const;
 	bool smoothing() const;
 	double smoothingBeta() const;
-	SuffixArray<int>::SortAlgorithm sortAlgorithm();
+	errormining::SuffixArray<int>::SortAlgorithm sortAlgorithm();
 	size_t suspFrequency() const;
 	double suspThreshold() const;
 	double threshold() const;
@@ -42,7 +39,7 @@ private:
 	size_t d_frequency;
 	bool d_smoothing;
 	double d_smoothingBeta;
-	SuffixArray<int>::SortAlgorithm d_sortAlgorithm;
+	errormining::SuffixArray<int>::SortAlgorithm d_sortAlgorithm;
 	size_t d_suspFrequency;
 	double d_suspThreshold;
 	double d_threshold;
@@ -108,7 +105,7 @@ inline double ProgramOptions::smoothingBeta() const
 	return d_smoothingBeta;
 }
 
-inline SuffixArray<int>::SortAlgorithm ProgramOptions::sortAlgorithm()
+inline errormining::SuffixArray<int>::SortAlgorithm ProgramOptions::sortAlgorithm()
 {
 	return d_sortAlgorithm;
 }
@@ -131,8 +128,6 @@ inline double ProgramOptions::threshold() const
 inline bool ProgramOptions::verbose() const
 {
 	return d_verbose;
-}
-
 }
 
 #endif // PROGRAM_OPTIONS_HH_

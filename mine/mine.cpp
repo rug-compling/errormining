@@ -7,13 +7,14 @@
 
 #include <tr1/memory>
 
-#include "errormining/HashedCorpus.hh"
-#include "errormining/Miner.hh"
-#include "errormining/Observer.hh"
-#include "errormining/ProgramOptions.hh"
-#include "errormining/SentenceHandler.hh"
-#include "errormining/SuffixArray.hh"
-#include "errormining/TokenizedSentenceReader.hh"
+#include <errormining/HashedCorpus.hh>
+#include <errormining/Miner.hh>
+#include <errormining/Observer.hh>
+#include <errormining/SentenceHandler.hh>
+#include <errormining/SuffixArray.hh>
+#include <errormining/TokenizedSentenceReader.hh>
+
+#include "ProgramOptions.hh"
 
 using namespace std;
 using namespace std::tr1;

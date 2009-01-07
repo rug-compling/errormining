@@ -37,9 +37,6 @@ void createTables()
 		"form TEXT, suspicion REAL, freq INTEGER, suspFreq INTEGER, "
 		"uniqSentsFreq INTEGER)");
 	createFormsTableQuery.exec();
-	
-	QSqlQuery createFormsIndexQuery("CREATE UNIQUE INDEX form_idx ON forms (form)");
-	createFormsIndexQuery.exec();
 
 	QSqlQuery createSentencesTableQuery("CREATE TABLE sentences ("
 		"sentence TEXT, unparsable BOOLEAN)");
@@ -49,15 +46,6 @@ void createTables()
 		"formId INTEGER, sentenceId INTEGER)");
 	createFormSentenceTableQuery.exec();
 	
-	//QSqlQuery createFormSentenceIndexQuery("CREATE UNIQUE INDEX formSentence_idx ON formSentence (formId, sentenceId)");
-	//createFormSentenceIndexQuery.exec();
-
-	QSqlQuery createSentenceIdIndexQuery("CREATE INDEX sentenceId_idx ON formSentence (sentenceId)");
-	createSentenceIdIndexQuery.exec();
-
-	QSqlQuery createFormIdIndexQuery("CREATE INDEX formId_idx ON formSentence (formId)");
-	createFormIdIndexQuery.exec();
-
 	QSqlDatabase::database().commit();
 }
 
@@ -95,6 +83,9 @@ size_t addResults(char const *resultsFilename)
 	}
 
 	QSqlDatabase::database().commit();
+
+	QSqlQuery createFormsIndexQuery("CREATE UNIQUE INDEX form_idx ON forms (form)");
+	createFormsIndexQuery.exec();
 	
 	return longestNgram;
 }
@@ -197,6 +188,12 @@ void populateLinkTable(vector<pair<uint, uint> > const &formSentencePairs)
 	if (insertFormSentenceQuery.lastError().isValid())
 		qDebug() << insertFormSentenceQuery.lastError();
 	QSqlDatabase::database().commit();
+
+	QSqlQuery createSentenceIdIndexQuery("CREATE INDEX sentenceId_idx ON formSentence (sentenceId)");
+	createSentenceIdIndexQuery.exec();
+
+	QSqlQuery createFormIdIndexQuery("CREATE INDEX formId_idx ON formSentence (formId)");
+	createFormIdIndexQuery.exec();
 }
 
 // Extract the set of form IDs, from the form-sentence link table.
