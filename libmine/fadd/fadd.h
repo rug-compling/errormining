@@ -177,14 +177,20 @@ public:
   int number_word(const char *word);
   const char *word_number(const int key);
   char *find_prefix(const char *word);
+#ifdef POOR_MORPH
   void set_morph_parms(const int prefixes, const int infixes,
 		       const int cat_only, const int ignorefiller) {
     morph_prefixes = prefixes; morph_infixes = infixes;
-#ifdef POOR_MORPH
     only_categories = cat_only;
-#endif
     ignore_filler = ignorefiller;
   }
+#else
+  void set_morph_parms(const int prefixes, const int infixes,
+		       const int, const int ignorefiller) {
+    morph_prefixes = prefixes; morph_infixes = infixes;
+    ignore_filler = ignorefiller;
+  }
+#endif
 };/*fsa*/
 
 #ifdef __cplusplus
