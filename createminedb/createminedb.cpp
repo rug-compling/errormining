@@ -118,6 +118,7 @@ list<pair<uint, uint> > addSentences(char const *filename, bool unparsable, int 
 	QSqlQuery insertSentenceQuery;
 	insertSentenceQuery.prepare("INSERT INTO sentences (sentence, unparsable) "
 		"VALUES (:sentence, :unparsable)");
+	insertSentenceQuery.bindValue(":unparsable", unparsable);
 
 	QHash<QString, uint> formIds = getFormIds();
 
@@ -157,7 +158,6 @@ list<pair<uint, uint> > addSentences(char const *filename, bool unparsable, int 
 
 		// Insert sentence.
 		insertSentenceQuery.bindValue(":sentence", sentence);
-		insertSentenceQuery.bindValue(":unparsable", unparsable);
 		insertSentenceQuery.exec();
 
 		// Retrieve the sentence ID.
