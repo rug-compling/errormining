@@ -90,81 +90,84 @@ size_t addResults(char const *resultsFilename)
 	return longestNgram;
 }
 
-void addSentences(char const *filename, bool unparsable)
+QHash<QString, uint> getFormIds()
+{
+	QHash<QString, uint> formIds;
+
+	// Prepare a query for finding forms.
+	QSqlQuery formIdQuery;
+	formIdQuery.prepare("SELECT form, rowid FROM forms");
+	formIdQuery.exec();
+	while (formIdQuery.next())
+	{
+		QString form = formIdQuery.value(0).toString();
+		uint formId = formIdQuery.value(1).toUInt();
+		formIds[form] = formId;
+	}
+
+	return formIds;
+}
+
+list<pair<uint, uint> > addSentences(char const *filename, bool unparsable, int n)
 {
 	QFile sentenceFile(filename);
 	if (!sentenceFile.open(QIODevice::ReadOnly | QIODevice::Text))
-		return;
+		throw runtime_error(string("Could not open sentence file: ") + filename);
 
-	{
-		// Prepare for inserting sentences.
-		QSqlQuery insertSentenceQuery;
-		insertSentenceQuery.prepare("INSERT INTO sentences (sentence, unparsable) "
-									"VALUES (:sentence, :unparsable)");
-		
-		// Insert sentences.
-		QSqlDatabase::database().transaction();
-		while (!sentenceFile.atEnd())
-		{
-			QString sentence = sentenceFile.readLine().trimmed();
-			insertSentenceQuery.bindValue(":sentence", sentence);
-			insertSentenceQuery.bindValue(":unparsable", unparsable);
-			insertSentenceQuery.exec();
-		}
-		QSqlDatabase::database().commit();
-	}
-}
+	// Prepare sentence insertion query.
+	QSqlQuery insertSentenceQuery;
+	insertSentenceQuery.prepare("INSERT INTO sentences (sentence, unparsable) "
+		"VALUES (:sentence, :unparsable)");
 
-list<pair<uint, uint> > findFormSentencePairs(int n)
-{
-	QHash<QString, uint> formIds;
-	{
-		// Prepare a query for finding forms.
-		QSqlQuery formIdQuery;
-		formIdQuery.prepare("SELECT form, rowid FROM forms");
-		formIdQuery.exec();
-		while (formIdQuery.next())
-		{
-			QString form = formIdQuery.value(0).toString();
-			uint formId = formIdQuery.value(1).toUInt();
-			formIds[form] = formId;
-		}
-	}
+	QHash<QString, uint> formIds = getFormIds();
 
 	list<pair<uint, uint> > formSentencePairs;
+	QSqlDatabase::database().transaction();
+	while (!sentenceFile.atEnd())
 	{
-		// Select all sentences.
-		QSqlQuery sentenceQuery("SELECT rowid, sentence FROM sentences");
-		sentenceQuery.exec();
-		
-		while (sentenceQuery.next())
-		{
-			uint sentenceId = sentenceQuery.value(0).toUInt();
-			QString sentence = sentenceQuery.value(1).toString();
-			
-			QStringList words = sentence.split(" ");
-			for (int i = 0; i < words.size(); ++i)
-				for (int j = 0; j < n; ++j)
-				{
-					if (i + j == words.size())
-						break;
-					
-					QStringList formList;
-					copy(words.begin() + i, words.begin() + i + j + 1, back_inserter(formList));
-					
-					QString form = formList.join(" ");
-					
-					QHash<QString, uint>::const_iterator iter = formIds.find(form);
-					
-					// Sometimes a form that is encountered in a sentence is not known because
-					// a frequency threshold is set in the miner. In this case, skip this form.
-					if (iter == formIds.end())
-						continue;
+		QString sentence = sentenceFile.readLine().trimmed();
 
-					formSentencePairs.push_back(make_pair(iter.value(), sentenceId));
-				}
+		QStringList words = sentence.split(" ");
+
+		list<uint> sentenceForms;
+		for (int i = 0; i < words.size(); ++i)
+			for (int j = 0; j < n; ++j)
+			{
+			if (i + j == words.size())
+				break;
+
+			QStringList formList;
+			copy(words.begin() + i, words.begin() + i + j + 1, back_inserter(formList));
+
+			QString form = formList.join(" ");
+
+			QHash<QString, uint>::const_iterator iter = formIds.find(form);
+
+			// Sometimes a form that is encountered in a sentence is not known because
+			// a frequency threshold is set in the miner. In this case, skip this form.
+			if (iter == formIds.end())
+				continue;
+
+			sentenceForms.push_back(iter.value());
 		}
+
+		// If none of the forms occurred in the sentence, there's no sense adding it.
+		if (sentenceForms.size() == 0)
+			continue;
+
+		// Insert sentence.
+		insertSentenceQuery.bindValue(":sentence", sentence);
+		insertSentenceQuery.bindValue(":unparsable", unparsable);
+		insertSentenceQuery.exec();
+
+		// Retrieve the sentence ID.
+		uint sentenceId = insertSentenceQuery.lastInsertId().toUInt();
+
+		for (list<uint>::const_iterator formIter = sentenceForms.begin();
+				formIter != sentenceForms.end(); ++formIter)
+			formSentencePairs.push_back(make_pair(*formIter, sentenceId));
 	}
+	QSqlDatabase::database().commit();
 
 	return formSentencePairs;
 }
@@ -255,12 +258,14 @@ void populateDatabase(char const *resultsFilename,
 	createTables();
 	cerr << "done!" << endl << "Adding mining results... ";
 	size_t n = addResults(resultsFilename);
-	cerr << "done!" << endl << "Adding sentences... ";
-	addSentences(unparsableFilename, true);
+	cerr << "done!" << endl << "Adding sentences and finding form-sentence links... ";
+	list<pair<uint, uint> > formSentencePairs = addSentences(unparsableFilename, true, n);
 	if (parsableFilename != 0)
-		addSentences(parsableFilename, false);
-	cerr << "done!" << endl << "Finding form-sentence links... ";
-	list<pair<uint, uint> > formSentencePairs = findFormSentencePairs(n);
+	{
+		list<pair<uint, uint> > parsableFormSentencePairs = addSentences(parsableFilename, false, n);
+		copy(parsableFormSentencePairs.begin(), parsableFormSentencePairs.end(),
+		     back_inserter(formSentencePairs));
+	}
 	cerr << "done!" << endl << "Populating link table... ";
 	populateLinkTable(formSentencePairs);
 	cerr << "done!" << endl << "Calculating unique sentence frequencies... ";
