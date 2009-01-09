@@ -354,7 +354,7 @@ void MinerMainWindow::showForms()
 	else
 	{
 		query.reset(new QSqlQuery("SELECT form, suspicion, suspFreq, uniqSentsFreq"
-			" FROM forms WHERE suspicion > :suspThreshold"
+			" FROM forms WHERE suspicion >= :suspThreshold"
 			" AND suspFreq >= :unparsableFreqThreshold AND freq >= :parsableFreqThreshold"));
 		query->bindValue("suspThreshold", suspThreshold);
 	}
