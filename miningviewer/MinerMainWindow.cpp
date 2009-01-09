@@ -334,7 +334,7 @@ void MinerMainWindow::showForms()
 	double avgMultiplier = settings.value(AVG_MULTIPLIER_SETTING,
 		AVG_MULTIPLIER_SETTING_DEFAULT).toDouble();
 	QString suspThresholdMethod = settings.value(THRESHOLD_METHOD_SETTING,
-		AVG_MULTIPLIER_METHOD).toString();
+		SUSP_THRESHOLD_METHOD_DEFAULT).toString();
 	uint unparsableFreqThreshold =
 		settings.value(UNPARSABLE_FREQ_THRESHOLD_SETTING,
 			UNPARSABLE_FREQ_THRESHOLD_DEFAULT).toUInt();

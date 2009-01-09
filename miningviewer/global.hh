@@ -12,12 +12,14 @@ QString const THRESHOLD_METHOD_SETTING = "thresholdMethod";
 QString const UNPARSABLE_FREQ_THRESHOLD_SETTING = "unparsableFreqThreshold";
 QString const FREQ_THRESHOLD_SETTING = "parsableFreqThreshold";
 
-double const SUSP_THRESHOLD_SETTING_DEFAULT = 0.5;
-double const AVG_MULTIPLIER_SETTING_DEFAULT = 1.5;
-uint const UNPARSABLE_FREQ_THRESHOLD_DEFAULT = 1;
-uint const FREQ_THRESHOLD_DEFAULT = 1;
-
 QString const AVG_MULTIPLIER_METHOD = "avgMultiplierMethod";
 QString const SUSP_THRESHOLD_METHOD = "suspThresholdMethod";
+
+
+double const SUSP_THRESHOLD_SETTING_DEFAULT = 0.1;
+double const AVG_MULTIPLIER_SETTING_DEFAULT = 1.5;
+QString const SUSP_THRESHOLD_METHOD_DEFAULT = SUSP_THRESHOLD_METHOD;
+uint const UNPARSABLE_FREQ_THRESHOLD_DEFAULT = 1;
+uint const FREQ_THRESHOLD_DEFAULT = 1;
 
 #endif // GLOBAL_HH

@@ -55,7 +55,7 @@ void PreferencesDialog::readSettings()
 	QString avgMultiplier = settings.value(AVG_MULTIPLIER_SETTING,
 		AVG_MULTIPLIER_SETTING_DEFAULT).toString();
 	QString suspThresholdMethod = settings.value(THRESHOLD_METHOD_SETTING,
-		AVG_MULTIPLIER_METHOD).toString();
+		SUSP_THRESHOLD_METHOD_DEFAULT).toString();
 	QString unparsableFreqThreshold =
 		settings.value(UNPARSABLE_FREQ_THRESHOLD_SETTING,
 			UNPARSABLE_FREQ_THRESHOLD_DEFAULT).toString();
