@@ -6,7 +6,7 @@ MinerMainWindow::MinerMainWindow(QWidget *parent) : QMainWindow(parent)
 
 	readSettings();
 
-	d_minerMainWindow.formsTreeWidget->sortByColumn(1, Qt::DescendingOrder);
+	d_minerMainWindow.formsTreeWidget->sortByColumn(0, Qt::DescendingOrder);
 
 	showForms();
 
