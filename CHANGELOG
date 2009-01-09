@@ -1,3 +1,15 @@
+Fri Jan  9 16:37:12 CET 2009
+
+- Improvements to the mining viewer, including underlining of forms
+  within the list of sentences, and a preferences dialog where
+  various thresholds can be set.
+- Include a small sample corpus, and a Makefile that automates mining.
+- Speed up searching through through suffix arrays by determining
+  the upper and lower bound of an n-gram with binary search.
+  Previously, n-gram was looked up through binary search, but the
+  upper and lower bounds were found with a linear search.
+- Many small fixes.
+
 Wed Dec 10 11:41:53 CET 2008
 
 - Integrate the error miner and viewer in the same build
