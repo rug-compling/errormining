@@ -423,6 +423,10 @@ void MinerMainWindow::updateSentenceList()
 				if (d_sentenceFilterRegExp->indexIn(sentence) == -1)
 					continue;
 
+			// A sentence may contain leftover HTML.
+			sentence = sentence.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+
+			// Underline the characters matched by the regex.
 			sentence = sentence.replace(*d_sentenceFilterRegExp, "<u>\\1</u>");
 
 			d_minerMainWindow.sentenceTextEdit->append(sentence);
@@ -450,7 +454,12 @@ void MinerMainWindow::updateSentenceList()
 				if (d_sentenceFilterRegExp->indexIn(sentence) == -1)
 					continue;
 
+			// A sentence may contain leftover HTML.
+			sentence = sentence.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+
+			// Underline the form.
 			sentence.replace(form, QString("<u>") + form + "</u>");
+
 			d_minerMainWindow.sentenceTextEdit->append(sentence);
 		}
 	}
