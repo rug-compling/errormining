@@ -95,10 +95,15 @@ make nlwikipedia-sample.db
 = Licensing =
 
 - Jan Daciuk's Fadd library, which is included in a slightly modified form
-  in the 'fadd' directory, is licensed under the LGPL. The license text can
-  be found in 'fadd/License.txt'.
+  in the 'fadd' directory, is licensed under the LGPL.
+- The error miner and viewer are licensed under the LGPL. Please note that
+  the miner requires the Qt library, which is licensed under the GPL
+	version 2 or 3.
 - The sample corpus is licensed under the GNU Free Documentation License,
   please refer to Examples/README for more information.
+
+The license text of the GNU Lesser General Public License 2.1 is provided
+in the COPYING file.
 
 = Todo =
 
