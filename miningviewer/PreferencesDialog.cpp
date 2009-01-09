@@ -16,6 +16,19 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) : QDialog(parent)
 
 void PreferencesDialog::accept()
 {
+	if (!(d_preferencesDialog.suspThresholdLineEdit->hasAcceptableInput() &&
+	    d_preferencesDialog.avgMultiplierLineEdit->hasAcceptableInput() &&
+	    d_preferencesDialog.unparsableFreqThresholdLineEdit->hasAcceptableInput() &&
+	    d_preferencesDialog.freqThresholdLineEdit->hasAcceptableInput()))
+	{
+		QMessageBox errorMessage(QMessageBox::Critical, "Invalid input",
+			"The given input is not valid, check if a floating point number "
+			"is used for the suspicion threshold, and integers for the "
+			"frequency thresholds.", QMessageBox::Ok, this);
+		errorMessage.exec();
+		return;
+	}
+
 	// Read settings from the dialog.
 	QString suspThreshold = d_preferencesDialog.suspThresholdLineEdit->text();
 	QString avgMultiplier = d_preferencesDialog.avgMultiplierLineEdit->text();

@@ -3,6 +3,7 @@
 #include <QDialog>
 #include <QDoubleValidator>
 #include <QIntValidator>
+#include <QMessageBox>
 #include <QSettings>
 #include <QString>
 
