@@ -4,6 +4,7 @@
 #include <tr1/memory>
 
 #include <QClipboard>
+#include <QDialog>
 #include <QMainWindow>
 #include <QRegExp>
 #include <QSettings>

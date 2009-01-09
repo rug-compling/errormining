@@ -391,8 +391,8 @@ void MinerMainWindow::showForms()
 
 void MinerMainWindow::showPreferences()
 {
-	d_preferencesDialog.exec();
-	showForms();
+	if (d_preferencesDialog.exec() == QDialog::Accepted)
+		showForms();
 }
 
 ScoringMethod MinerMainWindow::scoringMethod()

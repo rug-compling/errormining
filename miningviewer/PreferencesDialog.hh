@@ -13,6 +13,7 @@ public:
 	PreferencesDialog(QWidget *parent = 0);
 private slots:
 	void accept();
+	void reject();
 private:
 	PreferencesDialog(PreferencesDialog const &other);
 	PreferencesDialog &operator=(PreferencesDialog const &other);

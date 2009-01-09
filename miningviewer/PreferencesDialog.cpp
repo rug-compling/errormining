@@ -33,7 +33,16 @@ void PreferencesDialog::accept()
 	settings.setValue(UNPARSABLE_FREQ_THRESHOLD_SETTING, unparsableFreqThreshold);
 	settings.setValue(FREQ_THRESHOLD_SETTING, freqThreshold);
 
-	close();
+	QDialog::accept();
+}
+
+
+void PreferencesDialog::reject()
+{
+	// The user rejects the changes, so reset the.
+	readSettings();
+
+	QDialog::reject();
 }
 
 void PreferencesDialog::readSettings()
