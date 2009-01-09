@@ -79,7 +79,7 @@ void MinerMainWindow::formSelected(QTreeWidgetItem *item, QTreeWidgetItem *)
 		return; 
 	}
 
-	QString form = item->text(0);
+	QString form = item->text(1);
 	
 	{
 		QSqlQuery formInfoQuery;
@@ -186,15 +186,15 @@ void MinerMainWindow::removeSelectedForms()
 	// Remove the forms represented by the selected items.
 	for (QList<QTreeWidgetItem *>::iterator iter = selectedItems.begin();
 			iter != selectedItems.end(); ++iter)
-		removeForm((*iter)->text(0));
+		removeForm((*iter)->text(1));
 
 	// Scan up until we find a form that is still valid (exists in the
 	// database).
 	while (newIndex > 0 &&
-		!isValidForm(treeRootItem->child(newIndex)->text(0))) { --newIndex; }
+		!isValidForm(treeRootItem->child(newIndex)->text(1))) { --newIndex; }
 
 	// Get the valid form as a string.
-	QString selectForm = treeRootItem->child(newIndex)->text(0);
+	QString selectForm = treeRootItem->child(newIndex)->text(1);
 	
 	// Redisplay forms.
 	showForms();
@@ -381,8 +381,8 @@ void MinerMainWindow::showForms()
 
 		// Create and add an item for this form.
 		QTreeWidgetItem *item = new FormTreeWidgetItem(0);
-		item->setText(0, form);
-		item->setText(1, QString::number(score));
+		item->setText(0, QString::number(score));
+		item->setText(1, form);
 		items.append(item);
 	}
 		
@@ -444,7 +444,7 @@ void MinerMainWindow::updateSentenceList()
 		if (d_minerMainWindow.formsTreeWidget->currentItem() == 0)
 			return;
 
-		QString form = d_minerMainWindow.formsTreeWidget->currentItem()->text(0);
+		QString form = d_minerMainWindow.formsTreeWidget->currentItem()->text(1);
 
 		QSqlQuery sentenceQuery;
 		sentenceQuery.prepare("SELECT sentences.sentence FROM sentences, forms, formSentence"

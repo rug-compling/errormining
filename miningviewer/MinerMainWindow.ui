@@ -110,12 +110,12 @@
           </property>
           <column>
            <property name="text" >
-            <string>Form</string>
+            <string>Score</string>
            </property>
           </column>
           <column>
            <property name="text" >
-            <string>Score</string>
+            <string>Form</string>
            </property>
           </column>
          </widget>
