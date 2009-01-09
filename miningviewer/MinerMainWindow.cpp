@@ -183,7 +183,8 @@ void MinerMainWindow::removeSelectedForms()
 	// Remove the forms represented by the selected items.
 	for (QList<QTreeWidgetItem *>::iterator iter = selectedItems.begin();
 			iter != selectedItems.end(); ++iter)
-		removeForm((*iter)->text(1));
+		if (!removeForm((*iter)->text(1)))
+			return;
 
 	// Scan up until we find a form that is still valid (exists in the
 	// database).
@@ -206,7 +207,7 @@ void MinerMainWindow::removeSelectedForms()
 		d_minerMainWindow.formsTreeWidget->setCurrentItem(items[0]);
 }
 
-void MinerMainWindow::removeForm(QString const &form)
+bool MinerMainWindow::removeForm(QString const &form)
 {
 	set<int> affectedFormIds;
 	{
@@ -232,6 +233,15 @@ void MinerMainWindow::removeForm(QString const &form)
 
 		removeSentencesQuery.bindValue(":form", form);
 		removeSentencesQuery.exec();
+
+		if (removeSentencesQuery.lastError().isValid())
+		{
+			QMessageBox errorMessage(QMessageBox::Critical, "Could not remove form(s)",
+				"Could not remove the selected form(s)! Do you have write access "
+				"to this database?", QMessageBox::Ok, this);
+			errorMessage.exec();
+			return false;
+		}
 	}
 
 	{
@@ -247,6 +257,8 @@ void MinerMainWindow::removeForm(QString const &form)
 	}
 
 	removeStaleForms(affectedFormIds);
+
+	return true;
 }
 
 void MinerMainWindow::removeStaleForms(std::set<int> const &affectedFormIds)

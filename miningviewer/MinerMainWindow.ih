@@ -6,8 +6,10 @@
 #include <QClipboard>
 #include <QDialog>
 #include <QMainWindow>
+#include <QMessageBox>
 #include <QRegExp>
 #include <QSettings>
+#include <QSqlError>
 #include <QSqlQuery>
 #include <QSqlQueryModel>
 #include <QTreeWidgetItem>
