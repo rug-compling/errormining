@@ -14,8 +14,10 @@
 
 #include <errormining/ScoringMethod.hh>
 
+#include "global.hh"
 #include "FormTreeWidgetItem.hh"
 #include "MinerMainWindow.hh"
+#include "PreferencesDialog.hh"
 
 using namespace std;
 using namespace std::tr1;

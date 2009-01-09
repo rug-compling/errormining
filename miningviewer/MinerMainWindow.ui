@@ -16,9 +16,9 @@
    <property name="geometry" >
     <rect>
      <x>0</x>
-     <y>30</y>
+     <y>29</y>
      <width>800</width>
-     <height>547</height>
+     <height>549</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" >
@@ -314,13 +314,15 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>30</height>
+     <height>29</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile" >
     <property name="title" >
      <string>File</string>
     </property>
+    <addaction name="preferencesAction" />
+    <addaction name="separator" />
     <addaction name="quitAction" />
    </widget>
    <widget class="QMenu" name="menuEdit" >
@@ -336,9 +338,9 @@
    <property name="geometry" >
     <rect>
      <x>0</x>
-     <y>577</y>
+     <y>578</y>
      <width>800</width>
-     <height>23</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
@@ -378,6 +380,14 @@
    </property>
    <property name="shortcut" >
     <string>Ctrl+C</string>
+   </property>
+  </action>
+  <action name="preferencesAction" >
+   <property name="text" >
+    <string>Pref&amp;erences...</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+E</string>
    </property>
   </action>
  </widget>

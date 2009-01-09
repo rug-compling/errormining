@@ -1,0 +1,12 @@
+#include <limits>
+
+#include <QDialog>
+#include <QDoubleValidator>
+#include <QIntValidator>
+#include <QSettings>
+#include <QString>
+
+#include "global.hh"
+#include "PreferencesDialog.hh"
+
+using namespace std;

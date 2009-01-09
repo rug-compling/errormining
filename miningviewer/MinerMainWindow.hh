@@ -14,6 +14,7 @@
 
 #include <errormining/ScoringMethod.hh>
 
+#include "PreferencesDialog.hh"
 #include "ui_MinerMainWindow.h"
 
 namespace miningviewer {
@@ -37,6 +38,7 @@ private slots:
 	void removeStaleForms(std::set<int> const &affectedFormIds);
 	void sentenceRegExpChanged();
 	void sentenceSelected(QListWidgetItem *item, QListWidgetItem *);
+	void showPreferences();
 
 private:
 	MinerMainWindow(MinerMainWindow const &other);
@@ -51,6 +53,7 @@ private:
 	void writeSettings();
 
 	Ui::MinerMainWindow d_minerMainWindow;
+	PreferencesDialog d_preferencesDialog;
 	std::auto_ptr<QRegExp> d_filterRegExp;
 	std::auto_ptr<QRegExp> d_sentenceFilterRegExp;
 };

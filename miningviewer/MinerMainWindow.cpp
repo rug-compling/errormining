@@ -14,6 +14,8 @@ MinerMainWindow::MinerMainWindow(QWidget *parent) : QMainWindow(parent)
 
 	connect(d_minerMainWindow.copyAction, SIGNAL(activated()),
 		this, SLOT(copySentence()));
+	connect(d_minerMainWindow.preferencesAction, SIGNAL(activated()),
+		this, SLOT(showPreferences()));
 	connect(d_minerMainWindow.scoringComboBox, SIGNAL(currentIndexChanged(int)),
 		this, SLOT(scoringMethodChanged(int)));
 	connect(d_minerMainWindow.formsTreeWidget,
@@ -325,16 +327,48 @@ void MinerMainWindow::showForms()
 	ScoringMethod curScoringMethod = scoringMethod();
 	shared_ptr<ScoreFun> scoreFun = selectScoreFun(curScoringMethod);
 
+	// Retrieve threshold preferences.
+	QSettings settings("RUG", "Mining Viewer");
+	double suspThreshold = settings.value(SUSP_THRESHOLD_SETTING,
+		SUSP_THRESHOLD_SETTING_DEFAULT).toDouble();
+	double avgMultiplier = settings.value(AVG_MULTIPLIER_SETTING,
+		AVG_MULTIPLIER_SETTING_DEFAULT).toDouble();
+	QString suspThresholdMethod = settings.value(THRESHOLD_METHOD_SETTING,
+		AVG_MULTIPLIER_METHOD).toString();
+	uint unparsableFreqThreshold =
+		settings.value(UNPARSABLE_FREQ_THRESHOLD_SETTING,
+			UNPARSABLE_FREQ_THRESHOLD_DEFAULT).toUInt();
+	uint parsableFreqThreshold =
+		settings.value(FREQ_THRESHOLD_SETTING, FREQ_THRESHOLD_DEFAULT).toUInt();
+
 	QList<QTreeWidgetItem *> items;
 
-	QSqlQuery query("SELECT form, suspicion, suspFreq, uniqSentsFreq" 
-	  " FROM forms WHERE suspicion > 1.5 * (SELECT AVG(suspicion) FROM forms)");
-	while (query.next())
+	shared_ptr<QSqlQuery> query;
+	if (suspThresholdMethod == AVG_MULTIPLIER_METHOD)
 	{
-		QString form = query.value(0).toString();
-		double suspicion = query.value(1).toDouble();
-		uint suspFreq = query.value(2).toUInt();
-		uint uniqSentsFreq = query.value(3).toUInt();
+		query.reset(new QSqlQuery("SELECT form, suspicion, suspFreq, uniqSentsFreq"
+			" FROM forms WHERE suspicion >= :avgMultiplier * (SELECT AVG(suspicion) FROM forms) "
+			" AND suspFreq >= :unparsableFreqThreshold AND freq >= :unparsableFreqThreshold"));
+		query->bindValue("avgMultiplier", avgMultiplier);
+	}
+	else
+	{
+		query.reset(new QSqlQuery("SELECT form, suspicion, suspFreq, uniqSentsFreq"
+			" FROM forms WHERE suspicion > :suspThreshold"
+			" AND suspFreq >= :unparsableFreqThreshold AND freq >= :parsableFreqThreshold"));
+		query->bindValue("suspThreshold", suspThreshold);
+	}
+
+	query->bindValue(":unparsableFreqThreshold", unparsableFreqThreshold);
+	query->bindValue(":parsableFreqThreshold", parsableFreqThreshold);
+	query->exec();
+
+	while (query->next())
+	{
+		QString form = query->value(0).toString();
+		double suspicion = query->value(1).toDouble();
+		uint suspFreq = query->value(2).toUInt();
+		uint uniqSentsFreq = query->value(3).toUInt();
 
 		// If a regular expression was allocated, use it to filter forms;
 		// if this form does not match, skip it.
@@ -353,6 +387,12 @@ void MinerMainWindow::showForms()
 	}
 		
 	d_minerMainWindow.formsTreeWidget->insertTopLevelItems(0, items);
+}
+
+void MinerMainWindow::showPreferences()
+{
+	d_preferencesDialog.exec();
+	showForms();
 }
 
 ScoringMethod MinerMainWindow::scoringMethod()
