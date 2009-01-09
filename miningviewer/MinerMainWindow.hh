@@ -37,7 +37,6 @@ private slots:
 	void removeSelectedForms();
 	void removeStaleForms(std::set<int> const &affectedFormIds);
 	void sentenceRegExpChanged();
-	void sentenceSelected(QListWidgetItem *item, QListWidgetItem *);
 	void showPreferences();
 
 private:

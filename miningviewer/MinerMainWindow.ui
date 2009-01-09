@@ -255,18 +255,6 @@
          </widget>
         </item>
         <item>
-         <widget class="QGroupBox" name="groupBox_4" >
-          <property name="title" >
-           <string>Selected sentence:</string>
-          </property>
-          <layout class="QVBoxLayout" name="verticalLayout_3" >
-           <item>
-            <widget class="QLineEdit" name="sentenceLineEdit" />
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
          <widget class="QGroupBox" name="groupBox_2" >
           <property name="title" >
            <string>Unparsable sentences</string>
@@ -297,7 +285,14 @@
             </layout>
            </item>
            <item>
-            <widget class="QListWidget" name="sentenceListWidget" />
+            <widget class="QTextEdit" name="sentenceTextEdit" >
+             <property name="lineWrapMode" >
+              <enum>QTextEdit::NoWrap</enum>
+             </property>
+             <property name="readOnly" >
+              <bool>true</bool>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>

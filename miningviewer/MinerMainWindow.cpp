@@ -21,9 +21,6 @@ MinerMainWindow::MinerMainWindow(QWidget *parent) : QMainWindow(parent)
 	connect(d_minerMainWindow.formsTreeWidget,
 		SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)),
 		this, SLOT(formSelected(QTreeWidgetItem *, QTreeWidgetItem *)));
-	connect(d_minerMainWindow.sentenceListWidget,
-		SIGNAL(currentItemChanged(QListWidgetItem *, QListWidgetItem *)),
-		this, SLOT(sentenceSelected(QListWidgetItem *, QListWidgetItem *)));
 	connect(d_minerMainWindow.removeFormPushButton, SIGNAL(clicked()),
 		this, SLOT(removeSelectedForms()));
 	
@@ -43,7 +40,7 @@ void MinerMainWindow::close()
 
 void MinerMainWindow::copySentence()
 {
-	d_minerMainWindow.sentenceLineEdit->copy();
+	d_minerMainWindow.sentenceTextEdit->copy();
 }
 
 bool MinerMainWindow::isValidForm(QString const &form) const
@@ -286,7 +283,7 @@ void MinerMainWindow::sentenceRegExpChanged()
 	if (regexStr.size() == 0)
 		d_sentenceFilterRegExp.reset(0);
 	else {
-		QRegExp *sentenceFilterRegExp = new QRegExp(regexStr);
+		QRegExp *sentenceFilterRegExp = new QRegExp(QString("(") + regexStr + ")");
 
 		// Check if the regexp is valid. If not, we leave the existing
 		// regexp as-is.
@@ -307,17 +304,6 @@ void MinerMainWindow::sentenceRegExpChanged()
 
 	// Regenerate the sentence list with the current regexp.
 	updateSentenceList();
-}
-
-void MinerMainWindow::sentenceSelected(QListWidgetItem *item,
-	QListWidgetItem *)
-{
-	if (item == 0) {
-		d_minerMainWindow.sentenceLineEdit->clear();
-		return;
-	}
-
-	d_minerMainWindow.sentenceLineEdit->setText(item->text());
 }
 
 void MinerMainWindow::showForms()
@@ -419,7 +405,7 @@ ScoringMethod MinerMainWindow::scoringMethod()
 
 void MinerMainWindow::updateSentenceList()
 {	
-	d_minerMainWindow.sentenceListWidget->clear();
+	d_minerMainWindow.sentenceTextEdit->clear();
 
 	if (d_minerMainWindow.allSentenceMatchCheckBox->isChecked() &&
 		d_sentenceFilterRegExp.get() != 0)
@@ -437,7 +423,9 @@ void MinerMainWindow::updateSentenceList()
 				if (d_sentenceFilterRegExp->indexIn(sentence) == -1)
 					continue;
 
-			d_minerMainWindow.sentenceListWidget->addItem(sentence);
+			sentence = sentence.replace(*d_sentenceFilterRegExp, "<u>\\1</u>");
+
+			d_minerMainWindow.sentenceTextEdit->append(sentence);
 		}
 	}
 	else {
@@ -462,9 +450,12 @@ void MinerMainWindow::updateSentenceList()
 				if (d_sentenceFilterRegExp->indexIn(sentence) == -1)
 					continue;
 
-			d_minerMainWindow.sentenceListWidget->addItem(sentence);
+			sentence.replace(form, QString("<u>") + form + "</u>");
+			d_minerMainWindow.sentenceTextEdit->append(sentence);
 		}
 	}
+
+	d_minerMainWindow.sentenceTextEdit->moveCursor(QTextCursor::Start);
 }
 
 void MinerMainWindow::writeSettings()
