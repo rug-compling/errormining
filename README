@@ -81,11 +81,24 @@ be explored with the miningviewer:
 
 bin/miningviewer minedb
 
+= Example =
+
+A small Wikipedia-based sample corpus and a Makefile that can be used
+to automate mining, is included in the 'Examples' directory. After
+setting the paths in the Makefile, you can mine the corpus, and view
+the mining results with:
+
+cd Examples
+make nlwikipedia-sample.db
+../bin/miningviewer nlwikipedia-sample.db
+
 = Licensing =
 
-Jan Daciuk's Fadd library, which is included in a slightly modified form
-in the 'fadd' directory, is licensed under the LGPL. The license text can
-be found in 'fadd/License.txt'.
+- Jan Daciuk's Fadd library, which is included in a slightly modified form
+  in the 'fadd' directory, is licensed under the LGPL. The license text can
+  be found in 'fadd/License.txt'.
+- The sample corpus is licensed under the GNU Free Documentation License,
+  please refer to Examples/README for more information.
 
 = Todo =
 
