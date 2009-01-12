@@ -385,6 +385,7 @@ void MinerMainWindow::showForms()
 	}
 		
 	d_minerMainWindow.formsTreeWidget->insertTopLevelItems(0, items);
+	d_minerMainWindow.formsTreeWidget->setCurrentItem(0);
 }
 
 void MinerMainWindow::showPreferences()
