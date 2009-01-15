@@ -1,13 +1,14 @@
-Error-mining in parsing results
--------------------------------
+Error mining in parsing results
+===============================
+Daniel de Kok <d.j.a.de.kok@rug.nl>
 
-Please send flames to: Daniel de Kok <d.j.a.de.kok@rug.nl>
-
-= Introduction =
+Introduction
+------------
 
 This program implements error mining in parsing results, as described
-in [1]. In addition to unigrams and bigrams, larger problematic ngrams
-can also be mined.
+in [1]. It is used to find n-grams that are suspicious for causing
+incomplete parses. In addition to unigrams and bigrams, larger
+problematic ngrams can also be mined.
 
 A viewer for the results of the error mining is also included. The
 error miner produces a plain text file with suspicious forms. These
@@ -15,14 +16,21 @@ forms can be stored in a sqlite database, along with unparsable
 sentences. The viewer provides a comfortable interface to browse the
 mining database.
 
-= Compilation =
+Compilation
+-----------
 
 Requirements:
 
-* A C++ standard library that includes support for the TR1 shared_ptr
-  class. A recent version of GNU C++ will do fine (tested with g++
-  4.0.1 and 4.3.1).
-* Qt 4.x (tested with 4.4.0).
+- A C++ standard library that includes support for the TR1 shared_ptr
+  class. A recent version of GNU gcc will do fine.
+- Qt 4.x - Qt4 is included with most modern GNU/Linux distributions.
+  Installers for Mac OS X and Microsoft Windows are available from:
+	http://www.qtsoftware.com/
+
+Tested configurations:
+
+- Debian GNU/Linux (Lenny), g++ 4.3.2, Qt 4.4.0
+- Mac OS X 10.5, g++ 4.0.1, Qt 4.4.3
 
 Qt includes a tool for generating native build infrastructure, named
 'qmake'. Executing 'qmake' in the main source directory will generate
@@ -35,64 +43,82 @@ To use the error miner, you will need perfect hash automata of the
 types occurring in parsable and unparsable sentences. These automata
 can be created with the fsa_build utility from Jan Daciuk [2].
 
-= Creating a perfect hash automaton =
+Creating a perfect hash automaton
+---------------------------------
 
 The miner requires perfect hash automata for all types that occur
 in parsable and unparsable sentences. An automaton can be created
 in the following manner:
 
-tr -s '\012\011 ' '\012' < sentence_file | \
-  LANG=POSIX LC_ALL=POSIX sort -u | fsa_build -N -o dict.fsa
+ tr -s '\012\011 ' '\012' < sentence_file | \
+ 	LANG=POSIX LC_ALL=POSIX sort -u | fsa_build -N -o dict.fsa
 
 This step should be performed for creating an automaton for parsable
 sentences, and one for unparsable sentences.
 
-= Mining =
+Mining
+------
 
 Usage information can be obtained by running the miner without any
 options:
 
-./mine
+ ./mine
 
 If you don't want to adjust the default parameters, you can start
 mining parses by providing a perfect hash automaton, and files
 with parsable and unparsable sentences:
 
-./mine parsable.fsa unparsable.fsa parsable-sentences unparsable-sentences
+ ./mine parsable.fsa unparsable.fsa parsable-sentences unparsable-sentences
 
 The output format consists of the following elements:
 
-[ngram] [suspicion] [f(ngram)] [f_unparsable(ngram)]
+ [ngram] [suspicion] [f(ngram)] [f_unparsable(ngram)]
 
 For example:
 
-me blijft 1.0 4 4
+ me blijft 1.0 4 4
 
-= Viewing =
+It is recommended to use the '-s threshold' option to exclude forms
+with a very low suspicion, and the '-e factor' option to use an
+expansion factor. A good default is:
+
+ ./mine -s 0.001 -e 1.0 parsable.fsa unparsable.fsa parsable-sentences \
+ 	unparsable-sentences
+
+Viewing
+-------
 
 The viewer requires a SQLite database with all forms and unparsable
 sentences. You can create this database with the 'createminedb'
 utility:
 
-bin/createminedb mining_results unparsable_sentences minedb
+ bin/createminedb mining_results unparsable_sentences minedb
 
 This will create the 'minedb' database file. The database can now
 be explored with the miningviewer:
 
-bin/miningviewer minedb
+ bin/miningviewer minedb
 
-= Example =
+If you want to use the 'miningeval' tool for evaluation, you will have
+to add relevant parsable sentences to the database as well:
+
+ bin/createminedb mining_results parsable_sentences unparsable_sentences \
+ 	minedb
+
+Example
+-------
 
 A small Wikipedia-based sample corpus and a Makefile that can be used
 to automate mining, is included in the 'Examples' directory. After
 setting the paths in the Makefile, you can mine the corpus, and view
 the mining results with:
 
-cd Examples
-make nlwikipedia-sample.db
-../bin/miningviewer nlwikipedia-sample.db
+ cd Examples
+ make nlwikipedia-sample.db
+ ../bin/miningviewer nlwikipedia-sample.db
 
-= Licensing =
+Licensing
+---------
 
 - Jan Daciuk's Fadd library, which is included in a slightly modified form
   in the 'fadd' directory, is licensed under the LGPL.
@@ -105,13 +131,15 @@ make nlwikipedia-sample.db
 The license text of the GNU Lesser General Public License 2.1 is provided
 in the COPYING file.
 
-= Todo =
+Todo
+----
 
 - Clean up code and more error checking for database operations.
 
-= References =
+References
+----------
 
-[1] Error mining in parsing results, Benoît Sagot and Éric de la Clergerie,
-    Proceedings of the 21st International Conference on Computational
-    Linguistics and the 44th annual meeting of the ACL, 2006
-[2] http://www.eti.pg.gda.pl/katedry/kiw/pracownicy/Jan.Daciuk/personal/fsa.html
+1. Error mining in parsing results, Benoît Sagot and Éric de la Clergerie,
+   Proceedings of the 21st International Conference on Computational
+   Linguistics and the 44th annual meeting of the ACL, 2006
+2. http://www.eti.pg.gda.pl/katedry/kiw/pracownicy/Jan.Daciuk/personal/fsa.html
