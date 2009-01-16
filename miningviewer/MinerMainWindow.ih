@@ -12,6 +12,7 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QSqlQueryModel>
+#include <QTextDocument>
 #include <QTreeWidgetItem>
 #include <QWidget>
 

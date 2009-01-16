@@ -437,7 +437,7 @@ void MinerMainWindow::updateSentenceList()
 					continue;
 
 			// A sentence may contain leftover HTML.
-			sentence = sentence.replace("<", "&lt;").replace(">", "&gt;");
+			sentence = Qt::escape(sentence);
 
 			// Underline the characters matched by the regex.
 			sentence = sentence.replace(*d_sentenceFilterRegExp, "<u>\\1</u>");
@@ -459,6 +459,8 @@ void MinerMainWindow::updateSentenceList()
 		sentenceQuery.bindValue(":form", form);
 		sentenceQuery.exec();
 
+		form = Qt::escape(form);
+
 		while (sentenceQuery.next())
 		{
 			QString sentence = sentenceQuery.value(0).toString();
@@ -468,7 +470,7 @@ void MinerMainWindow::updateSentenceList()
 					continue;
 
 			// A sentence may contain leftover HTML.
-			sentence = sentence.replace("<", "&lt;").replace(">", "&gt;");
+			sentence = Qt::escape(sentence);
 
 			// Underline the form.
 			sentence.replace(form, QString("<u>") + form + "</u>");
