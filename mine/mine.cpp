@@ -76,6 +76,20 @@ shared_ptr<HashedCorpus> readHashedCorpus(ProgramOptions const &programOptions,
 	return hashedCorpus;
 }
 
+shared_ptr<HashAutomaton> readHashAutomaton(string filename)
+{
+	// Read the perfect hash automaton.
+	shared_ptr<HashAutomaton> automaton;
+	try {
+		automaton.reset(new HashAutomaton(filename));
+	} catch (InvalidAutomatonException e) {
+		cout << e.what() << endl;
+		automaton.reset();
+	}
+
+	return automaton;
+}
+
 int main(int argc, char *argv[])
 {
 	auto_ptr<ProgramOptions> programOptions;
@@ -90,38 +104,52 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	if (programOptions->arguments().size() != 4)
+	if (programOptions->arguments().size() < 4 || programOptions->arguments().size() % 4 != 0)
 	{
 		usage(programOptions->programName());
 		return 1;
 	}
 
-	// Read the perfect hash automaton.
-	shared_ptr<HashAutomaton> parsableHashAutomaton;
-	shared_ptr<HashAutomaton> unparsableHashAutomaton;
-	try {
-		parsableHashAutomaton.reset(new HashAutomaton(programOptions->arguments()[0]));
-		unparsableHashAutomaton.reset(new HashAutomaton(programOptions->arguments()[1]));
-	} catch (InvalidAutomatonException e) {
-		cout << e.what() << endl;
-		return 1;
-	}
+	Miner::AutomatonVector parsableAutomata;
+	Miner::AutomatonVector unparsableAutomata;
+	Miner::SuffixArrayVector parsableSuffixArrays;
+	Miner::SuffixArrayVector unparsableSuffixArrays;
 
-	// Read the corpus as a sequence of hash codes.
-	if (programOptions->verbose())
-		cerr << "Reading and hashing the corpus... ";
-	shared_ptr<HashedCorpus> hashedCorpus = readHashedCorpus(*programOptions,
+	for (size_t i = 0; i < programOptions->arguments().size(); i += 4)
+	{
+		// Read the perfect hash automaton.
+		shared_ptr<HashAutomaton> parsableHashAutomaton(
+			readHashAutomaton(programOptions->arguments()[i]));
+		shared_ptr<HashAutomaton> unparsableHashAutomaton(
+			readHashAutomaton(programOptions->arguments()[i + 1]));
+
+		if (parsableHashAutomaton.get() == 0 || unparsableHashAutomaton.get() == 0)
+			return 1;
+
+		parsableAutomata.push_back(parsableHashAutomaton);
+		unparsableAutomata.push_back(unparsableHashAutomaton);
+
+		// Read the corpus as a sequence of hash codes.
+		if (programOptions->verbose())
+			cerr << "Reading and hashing the corpus(" << i / 4 << ")... ";
+
+		shared_ptr<HashedCorpus> hashedCorpus = readHashedCorpus(*programOptions,
 			parsableHashAutomaton, unparsableHashAutomaton);
-	if (programOptions->verbose())
-		cerr << "Done!" << endl << "Creating suffix arrays... ";
 
-	// Store the corpora as suffix arrays.
-	shared_ptr<SuffixArray<int> >
-		goodSuffixArray(new SuffixArray<int>(
+		if (programOptions->verbose())
+			cerr << "Done!" << endl << "Creating suffix arrays(" << i / 4 << ")... ";
+
+		// Store the corpora as suffix arrays.
+		shared_ptr<SuffixArray<int> >
+			goodSuffixArray(new SuffixArray<int>(
 				hashedCorpus->good(), programOptions->sortAlgorithm()));
-	shared_ptr<SuffixArray<int> >
-		badSuffixArray(new SuffixArray<int>(
+		shared_ptr<SuffixArray<int> >
+			badSuffixArray(new SuffixArray<int>(
 				hashedCorpus->bad(), programOptions->sortAlgorithm()));
+
+		parsableSuffixArrays.push_back(goodSuffixArray);
+		unparsableSuffixArrays.push_back(badSuffixArray);
+	}
 
 	if (programOptions->verbose())
 		cerr << "Done!" << endl;
@@ -130,8 +158,8 @@ int main(int argc, char *argv[])
 	TokenizedSentenceReader reader;
 
 	// Create a miner, and register it as a handler for the sentence reader.
-	Miner miner(parsableHashAutomaton, unparsableHashAutomaton, goodSuffixArray,
-			badSuffixArray, programOptions->n(), programOptions->m(),
+	Miner miner(parsableAutomata, unparsableAutomata, parsableSuffixArrays,
+			unparsableSuffixArrays, programOptions->n(), programOptions->m(),
 			programOptions->ngramExpansion(), programOptions->expansionFactorAlpha(),
 			programOptions->smoothing(), programOptions->smoothingBeta());
 	reader.addHandler(&miner);
@@ -184,7 +212,7 @@ int main(int argc, char *argv[])
 				formIter->nSuspObservations() >= programOptions->suspFrequency())
 		{
 			transform(formIter->ngram().begin(), formIter->ngram().end(),
-					ostream_iterator<string>(cout, " "), *unparsableHashAutomaton);
+					ostream_iterator<string>(cout, " "), *unparsableAutomata[0]);
 			cout << formIter->suspicion() << " " <<
 				formIter->nObservations() << " " << formIter->nSuspObservations() <<
 				endl;

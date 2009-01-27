@@ -239,7 +239,7 @@ Sentence Miner::expandNgrams(double error, std::vector<int> const &hashedTokens)
 double Miner::expansionFactor(std::vector<int>::const_iterator const &ngramBegin,
 		std::vector<int>::const_iterator const &ngramEnd) const
 {
-	SuffixArray<int>::IterPair badIters = d_badSuffixArray->find(ngramBegin,
+	SuffixArray<int>::IterPair badIters = d_unparsableSuffixArrays[0]->find(ngramBegin,
 			ngramEnd);
 	size_t badFreq = distance(badIters.first, badIters.second);
 
@@ -268,7 +268,7 @@ void Miner::handleSentence(vector<string> const &tokens, double error)
 
 	vector<int> hashedTokens;
 	transform(tokens.begin(), tokens.end(), back_inserter(hashedTokens),
-		*d_unparsableHashAutomaton);
+		*d_unparsableHashAutomata[0]);
 
 	if (d_ngramExpansion)
 		d_sentences->push_back(expandNgrams(error, hashedTokens));
@@ -303,7 +303,7 @@ void Miner::newSuspForm(IntVecIterPair const &bestNgram, Sentence *sentence)
 		// Look up the number of unsuspicious observations of the ngram
 		// with the highest unparsable:parsable ratio.
 		SuffixArray<int>::IterPair goodIters =
-			d_goodSuffixArray->find(parsableBestNgram.begin(),
+			d_parsableSuffixArrays[0]->find(parsableBestNgram.begin(),
 					parsableBestNgram.end());
 		size_t unsuspObservations = distance(goodIters.first, goodIters.second);
 
@@ -337,11 +337,11 @@ double Miner::ngramRatio(
 	vector<int> parsableNgram = unparsableToParsableHashCodes(ngramBegin,
 			ngramEnd);
 
-	SuffixArray<int>::IterPair goodIters = d_goodSuffixArray->find(parsableNgram.begin(),
+	SuffixArray<int>::IterPair goodIters = d_parsableSuffixArrays[0]->find(parsableNgram.begin(),
 			parsableNgram.end());
 	size_t goodFreq = distance(goodIters.first, goodIters.second);
 
-	SuffixArray<int>::IterPair badIters = d_badSuffixArray->find(ngramBegin,
+	SuffixArray<int>::IterPair badIters = d_unparsableSuffixArrays[0]->find(ngramBegin,
 			ngramEnd);
 	size_t badFreq = distance(badIters.first, badIters.second);
 
@@ -403,12 +403,12 @@ std::vector<int> Miner::unparsableToParsableHashCodes(
 	// Convert from unparsable hash codes to strings.
 	vector<string> stringNgram;
 	transform(unparsableNgramBegin, unparsableNgramEnd,
-			back_inserter(stringNgram), *d_unparsableHashAutomaton);
+			back_inserter(stringNgram), *d_unparsableHashAutomata[0]);
 
 	// Convert from strings to parsable hash codes.
 	vector<int> parsableNgram;
 	transform(stringNgram.begin(), stringNgram.end(), back_inserter(parsableNgram),
-			*d_parsableHashAutomaton);
+			*d_parsableHashAutomata[0]);
 
 	return parsableNgram;
 }
