@@ -72,8 +72,6 @@ struct FormPtrSuspSum : std::binary_function<double, double, FormPtr>
 class Miner : public SentenceHandler, public Observable
 {
 public:
-	typedef std::vector<std::tr1::shared_ptr<HashAutomaton const> > AutomatonVector;
-	typedef std::vector<std::tr1::shared_ptr<SuffixArray<int> const> > SuffixArrayVector;
 	/**
 	 * Construct a miner.
 	 * @param parsableHashAutomaton A shared pointer to a perfect hash
@@ -88,16 +86,16 @@ public:
 	 * @param allNgrams Analyze all n-grams (or just those that occur in
 	 *  unparsable sentences).
 	 */
-	Miner(AutomatonVector parsableHashAutomata,
-			AutomatonVector unparsableHashAutomata,
-			SuffixArrayVector parsableSuffixArrays,
-			SuffixArrayVector unparsableSuffixArrays,
+	Miner(std::tr1::shared_ptr<HashAutomaton const> parsableHashAutomaton,
+			std::tr1::shared_ptr<HashAutomaton const> unparsableHashAutomaton,
+			std::tr1::shared_ptr<SuffixArray<int> const > parsableSuffixArray,
+			std::tr1::shared_ptr<SuffixArray<int> const > unparsableSuffixArray,
 			size_t n = 1, size_t m = 1, bool ngramExpansion = true,
 			double expansionFactorAlpha = 0.0, bool smoothing = true, double smoothingBeta = 0.1) :
-		d_parsableHashAutomata(parsableHashAutomata),
-		d_unparsableHashAutomata(unparsableHashAutomata),
-		d_parsableSuffixArrays(parsableSuffixArrays),
-		d_unparsableSuffixArrays(unparsableSuffixArrays), d_n(n), d_m(m),
+		d_parsableHashAutomaton(parsableHashAutomaton),
+		d_unparsableHashAutomaton(unparsableHashAutomaton),
+		d_goodSuffixArray(parsableSuffixArray),
+		d_badSuffixArray(unparsableSuffixArray), d_n(n), d_m(m),
 		d_ngramExpansion(ngramExpansion), d_expansionFactorAlpha(expansionFactorAlpha),
 		d_smoothing(smoothing), d_smoothingBeta(smoothingBeta),
 		d_forms(new QSet<FormPtr>()),
@@ -180,10 +178,10 @@ private:
 
 	typedef QSet<FormPtr> FormPtrSet;
 
-	AutomatonVector d_parsableHashAutomata;
-	AutomatonVector d_unparsableHashAutomata;
-	SuffixArrayVector d_parsableSuffixArrays;
-	SuffixArrayVector d_unparsableSuffixArrays;
+	std::tr1::shared_ptr<HashAutomaton const> d_parsableHashAutomaton;
+	std::tr1::shared_ptr<HashAutomaton const> d_unparsableHashAutomaton;
+	std::tr1::shared_ptr<SuffixArray<int> const> d_goodSuffixArray;
+	std::tr1::shared_ptr<SuffixArray<int> const> d_badSuffixArray;
 	size_t d_n;
 	size_t d_m;
 	bool d_ngramExpansion;
