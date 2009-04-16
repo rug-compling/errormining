@@ -45,6 +45,10 @@ def extractWordTags(line):
 
 def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFile):
     corpusFile = open(filename, 'r')
+    wordTagCache = dict()
+    wordWordCache = dict()
+    #wordTagMistakeCache = dict()
+
     for line in corpusFile:
         wordTags = extractWordTags(line)
         
@@ -55,13 +59,27 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
             susp = float(len(errIdx)) / (len(errIdx) + len(okIdx))
             
             for j in range(i + 1, len(wordTags)):
-                newOkIdx = set(map(lambda x: x + 1, okIdx))
-                newErrIdx = set(map(lambda x: x + 1, errIdx))
-
-                # Expand with a tag?
                 tag = wordTags[j][1]
-                tagOkIdx = tagsOk.get(tag, set()).intersection(newOkIdx)
-                tagErrIdx = tagsErr.get(tag, set()).intersection(newErrIdx)
+
+                tagOkIdx = None
+                tagErrIdx = None
+                newOkIdx = None
+                newErrIdx = None
+
+                if len(ngram) == 1:
+                    tagOkIdx = wordTagCache.get((ngram[0], tag, True))
+                    tagErrIdx = wordTagCache.get((ngram[0], tag, False))
+
+                if tagOkIdx == None or tagErrIdx == None:
+                    newOkIdx = set(map(lambda x: x + 1, okIdx))
+                    newErrIdx = set(map(lambda x: x + 1, errIdx))
+
+                    tagOkIdx = tagsOk.get(tag, set()).intersection(newOkIdx)
+                    tagErrIdx = tagsErr.get(tag, set()).intersection(newErrIdx)
+
+                    if len(ngram) == 1 and (len(tagOkIdx) > 10 or len(tagErrIdx) > 10):
+                        wordTagCache[(ngram[0], tag, True)] = tagOkIdx
+                        wordTagCache[(ngram[0], tag, False)] = tagErrIdx
 
                 if len(tagErrIdx) + len(tagOkIdx) == 0:
                     newSusp = 0.0
@@ -79,8 +97,23 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
 
                 # Try word expansion
                 word = wordTags[j][0]
-                wordOkIdx = wordsOk.get(word, set()).intersection(newOkIdx)
-                wordErrIdx = wordsErr.get(word, set()).intersection(newErrIdx)
+
+                if len(ngram) == 1:
+                    wordOkIdx = wordWordCache.get((ngram[0], word, True))
+                    wordErrIdx = wordWordCache.get((ngram[0], word, False))
+
+                if wordOkIdx == None or wordErrIdx == None:
+                    if newOkIdx == None:
+                        newOkIdx = set(map(lambda x: x + 1, okIdx))
+                    if newErrIdx == None:
+                        newErrIdx = set(map(lambda x: x + 1, errIdx))
+
+                    wordOkIdx = wordsOk.get(word, set()).intersection(newOkIdx)
+                    wordErrIdx = wordsErr.get(word, set()).intersection(newErrIdx)
+
+                    if len(ngram) == 1 and (len(wordOkIdx) > 10 or len(wordErrIdx) > 10):
+                        wordWordCache[(ngram[0], word, True)] = wordOkIdx
+                        wordWordCache[(ngram[0], word, False)] = wordErrIdx
 
                 if len(wordErrIdx) + len(wordOkIdx) == 0:
                     break
@@ -89,7 +122,7 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
 
                 ef = expansionFactor(len(wordErrIdx))
 
-                if newSusp > susp:
+                if newSusp > susp * ef:
                     ngram.append(word)
                     okIdx = wordOkIdx
                     errIdx = wordErrIdx
@@ -117,8 +150,14 @@ if __name__ == "__main__":
     (wordsErr, tagsErr) = readCorpus(sys.argv[2])
     sys.stderr.write(" done!\n")
 
+    sys.stderr.write("Expanding sentences...")
     sentFile = open(sys.argv[3], "w")
     formFile = open(sys.argv[4], "w")
 
     expandCorpus(sys.argv[2], wordsOk, tagsOk, wordsErr, tagsErr, sentFile,
                  formFile)
+
+    sys.stderr.write(" done!\n")
+
+    sentFile.close()
+    formFile.close()
