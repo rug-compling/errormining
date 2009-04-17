@@ -27,13 +27,18 @@ def readCorpus(filename):
         for part in lineParts:
             (word, tag) = part.rsplit('/', 1)
 
-            if not words.has_key(word):
+            try:
+                words[word].add(position)
+            except KeyError:
                 words[word] = set()
-            words[word].add(position)
+                words[word].add(position)
+                
 
-            if not tags.has_key(tag):
+            try:
+                tags[tag].add(position)
+            except KeyError:
                 tags[tag] = set()
-            tags[tag].add(position)
+                tags[tag].add(position)
 
             position += 1
 
@@ -63,6 +68,7 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
 
                 tagOkIdx = None
                 tagErrIdx = None
+
                 newOkIdx = None
                 newErrIdx = None
 
@@ -74,14 +80,14 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
                     newOkIdx = set(map(lambda x: x + 1, okIdx))
                     newErrIdx = set(map(lambda x: x + 1, errIdx))
 
-                    tagOkIdx = tagsOk.get(tag, set()).intersection(newOkIdx)
-                    tagErrIdx = tagsErr.get(tag, set()).intersection(newErrIdx)
+                    tagOkIdx = tagsOk.get(tag, set()) & newOkIdx
+                    tagErrIdx = tagsErr.get(tag, set()) & newErrIdx
 
-                    if len(ngram) == 1 and (len(tagOkIdx) > 10 or len(tagErrIdx) > 10):
+                    if len(ngram) == 1 and (len(tagOkIdx) > 5 or len(tagErrIdx) > 5):
                         wordTagCache[(ngram[0], tag, True)] = tagOkIdx
                         wordTagCache[(ngram[0], tag, False)] = tagErrIdx
 
-                if len(tagErrIdx) + len(tagOkIdx) == 0:
+                if len(tagErrIdx) == 0:
                     newSusp = 0.0
                 else:
                     newSusp = float(len(tagErrIdx)) / (len(tagErrIdx) + len(tagOkIdx))
@@ -98,6 +104,9 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
                 # Try word expansion
                 word = wordTags[j][0]
 
+                wordOkIdx = None
+                wordErrIdx = None
+
                 if len(ngram) == 1:
                     wordOkIdx = wordWordCache.get((ngram[0], word, True))
                     wordErrIdx = wordWordCache.get((ngram[0], word, False))
@@ -108,21 +117,24 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
                     if newErrIdx == None:
                         newErrIdx = set(map(lambda x: x + 1, errIdx))
 
-                    wordOkIdx = wordsOk.get(word, set()).intersection(newOkIdx)
-                    wordErrIdx = wordsErr.get(word, set()).intersection(newErrIdx)
+                    wordOkIdx = wordsOk.get(word, set()) & newOkIdx
+                    wordErrIdx = wordsErr.get(word, set()) & newErrIdx
 
-                    if len(ngram) == 1 and (len(wordOkIdx) > 10 or len(wordErrIdx) > 10):
+                    if len(ngram) == 1 and (len(wordOkIdx) > 5 or len(wordErrIdx) > 5):
                         wordWordCache[(ngram[0], word, True)] = wordOkIdx
                         wordWordCache[(ngram[0], word, False)] = wordErrIdx
 
-                if len(wordErrIdx) + len(wordOkIdx) == 0:
+                if len(wordErrIdx) == 0:
                     break
-                else:
-                    newSusp = float(len(wordErrIdx)) / (len(wordErrIdx) + len(wordOkIdx))
 
+                newSusp = float(len(wordErrIdx)) / (len(wordErrIdx) + len(wordOkIdx))
                 ef = expansionFactor(len(wordErrIdx))
 
                 if newSusp > susp * ef:
+                    #print "Expanding %s with %s" % ('_'.join(ngram), word)
+                    #if len(errIdx) < 20 and len(wordErrIdx) < 5 and len(wordsErr.get(word,set())) < 10:
+                    #    print errIdx, wordsErr.get(word, set()), wordErrIdx
+
                     ngram.append(word)
                     okIdx = wordOkIdx
                     errIdx = wordErrIdx
@@ -131,16 +143,18 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
 
                 break
 
-            ngramStr = ('_').join(ngram)
+            ngramStr = '_'.join(ngram)
             formFile.write("%s %f %d %d\n" % (ngramStr, susp, len(okIdx), len(errIdx)))
-            sentFile.write(('_').join(ngram))
+            #if len(errIdx) < 5:
+            #    print ngramStr, errIdx
+        
+            sentFile.write(ngramStr)
             sentFile.write(' ')
 
         sentFile.write('\n')
                     
 
-
-if __name__ == "__main__":
+def run():
     if len(sys.argv) != 5:
         print "Usage: %s good bad sent_out forms_out" % sys.argv[0]
         sys.exit(1)
@@ -161,3 +175,8 @@ if __name__ == "__main__":
 
     sentFile.close()
     formFile.close()
+
+#import cProfile 
+if __name__ == "__main__":
+    #cProfile.run('run()','profstats')
+    run()
