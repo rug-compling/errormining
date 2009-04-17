@@ -131,10 +131,6 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
                 ef = expansionFactor(len(wordErrIdx))
 
                 if newSusp > susp * ef:
-                    #print "Expanding %s with %s" % ('_'.join(ngram), word)
-                    #if len(errIdx) < 20 and len(wordErrIdx) < 5 and len(wordsErr.get(word,set())) < 10:
-                    #    print errIdx, wordsErr.get(word, set()), wordErrIdx
-
                     ngram.append(word)
                     okIdx = wordOkIdx
                     errIdx = wordErrIdx
@@ -145,8 +141,6 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
 
             ngramStr = '_'.join(ngram)
             formFile.write("%s %f %d %d\n" % (ngramStr, susp, len(okIdx), len(errIdx)))
-            #if len(errIdx) < 5:
-            #    print ngramStr, errIdx
         
             sentFile.write(ngramStr)
             sentFile.write(' ')
