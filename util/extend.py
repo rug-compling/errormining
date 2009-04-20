@@ -2,6 +2,12 @@
 #
 # Word and part of speech expansion preprocessor script.
 #
+# To try:
+#
+# - Go for the best expansion, word or tag. If it is a tie, choose the
+#   one with the highest number of observations within unparsable
+#   sentences. 
+#
 
 import math
 import sys

@@ -134,6 +134,7 @@ in the COPYING file.
 Todo
 ----
 
+- Separate preprocessor (n-gram expansion) and the miner.
 - Clean up code and more error checking for database operations.
 
 References
