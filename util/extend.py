@@ -56,17 +56,43 @@ def extractWordTags(line):
     lineParts = line.strip().split()
     return map(lambda x: x.rsplit('/', 1), lineParts)
 
-def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFile, compete = False):
+def sequenceRatio(wordsOk, tagsOk, wordsErr, tagsErr, seq):
+    types = map(lambda x: x[0], seq)
+    flat = map(lambda x: x[1], seq)
+
+    okIdx = None
+    errIdx = None
+    
+    for i in range(len(seq)):
+        if types[i] == 'w':
+            okMap = wordsOk
+            errMap = wordsErr
+        else:
+            okMap = tagsOk
+            errMap = tagsErr
+
+        if i == 0:
+            okIdx = okMap.get(flat[i], set())
+            errIdx = errMap.get(flat[i], set())
+        else:
+            newOkIdx = set(map(lambda x: x + 1, okIdx))
+            newErrIdx = set(map(lambda x: x + 1, errIdx))
+            
+            okIdx = newOkIdx.intersection(okMap.get(flat[i], set()))
+            errIdx = newErrIdx.intersection(errMap.get(flat[i], set()))
+
+    return float(len(errIdx)) / (len(okIdx) + len(errIdx))
+
+
+def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFile, debug):
     corpusFile = open(filename, 'r')
-    wordTagCache = dict()
-    wordWordCache = dict()
-    #wordTagMistakeCache = dict()
+    bigramCache = dict()
 
     for line in corpusFile:
         wordTags = extractWordTags(line)
         
         for i in range(len(wordTags)):
-            ngram = [wordTags[i][0]]
+            ngram = [('w',wordTags[i][0])]
             okIdx = wordsOk.get(wordTags[i][0], set())
             errIdx = wordsErr[wordTags[i][0]]
             susp = float(len(errIdx)) / (len(errIdx) + len(okIdx))
@@ -81,8 +107,8 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
                 newErrIdx = None
 
                 if len(ngram) == 1:
-                    tagOkIdx = wordTagCache.get((ngram[0], tag, True))
-                    tagErrIdx = wordTagCache.get((ngram[0], tag, False))
+                    tagOkIdx = bigramCache.get((ngram[0], ('t', tag), True))
+                    tagErrIdx = bigramCache.get((ngram[0], ('t', tag), False))
 
                 if tagOkIdx == None or tagErrIdx == None:
                     newOkIdx = set(map(lambda x: x + 1, okIdx))
@@ -92,8 +118,8 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
                     tagErrIdx = tagsErr.get(tag, set()) & newErrIdx
 
                     if len(ngram) == 1 and (len(tagOkIdx) > 5 or len(tagErrIdx) > 5):
-                        wordTagCache[(ngram[0], tag, True)] = tagOkIdx
-                        wordTagCache[(ngram[0], tag, False)] = tagErrIdx
+                        bigramCache[(ngram[0], ('t', tag), True)] = tagOkIdx
+                        bigramCache[(ngram[0], ('t', tag), False)] = tagErrIdx
 
                 if len(tagErrIdx) == 0:
                     newTagSusp = 0.0
@@ -102,18 +128,17 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
 
                 ef = expansionFactor(len(tagErrIdx))
 
-                tagExpandSuccess = False
-                if newTagSusp > susp * ef:
-                    # If we do not allow comptetition between the tag and
-                    # word completion, continue expansion for the next token.
-                    if not compete:
-                        ngram.append(tag)
-                        okIdx = tagOkIdx
-                        errIdx = tagErrIdx
-                        susp = newTagSusp
-                        continue
 
-                    tagExpandSuccess = True
+                #secondGram = ngram[1:]
+                #secondGram.append(('t', tag))
+                #print sequenceRatio(wordsOk, tagsOk, wordsErr, tagsErr, secondGram)
+
+                if newTagSusp > susp * ef:
+                    ngram.append(('t',tag))
+                    okIdx = tagOkIdx
+                    errIdx = tagErrIdx
+                    susp = newTagSusp
+                    continue
 
                 # Try word expansion
                 word = wordTags[j][0]
@@ -122,8 +147,8 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
                 wordErrIdx = None
 
                 if len(ngram) == 1:
-                    wordOkIdx = wordWordCache.get((ngram[0], word, True))
-                    wordErrIdx = wordWordCache.get((ngram[0], word, False))
+                    wordOkIdx = bigramCache.get((ngram[0], ('w', word), True))
+                    wordErrIdx = bigramCache.get((ngram[0], ('w', word), False))
 
                 if wordOkIdx == None or wordErrIdx == None:
                     if newOkIdx == None:
@@ -135,8 +160,8 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
                     wordErrIdx = wordsErr.get(word, set()) & newErrIdx
 
                     if len(ngram) == 1 and (len(wordOkIdx) > 5 or len(wordErrIdx) > 5):
-                        wordWordCache[(ngram[0], word, True)] = wordOkIdx
-                        wordWordCache[(ngram[0], word, False)] = wordErrIdx
+                        bigramCache[(ngram[0], ('w', word), True)] = wordOkIdx
+                        bigramCache[(ngram[0], ('w', word), False)] = wordErrIdx
 
                 if len(wordErrIdx) == 0:
                     newWordSusp = 0.0
@@ -146,31 +171,16 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
                 ef = expansionFactor(len(wordErrIdx))
 
                 if newWordSusp > susp * ef:
-                    # Set the new suspicion to the word expansion suspicion
-                    # if:
-                    #
-                    # - We are not competing (in this case, the tag expansion
-                    #   failed).
-                    # - We are competing, and expanding with a word gives
-                    #   a higher suspicion than expanding with a tag.
-                    if not compete or newWordSusp > newTagSusp:
-                        ngram.append(word)
-                        okIdx = wordOkIdx
-                        errIdx = wordErrIdx
-                        susp = newWordSusp
-                        continue
-
-                # Competing mode, and we are not using the word expansion.
-                if tagExpandSuccess:
-                    ngram.append(tag)
-                    okIdx = tagOkIdx
-                    errIdx = tagErrIdx
-                    susp = newTagSusp
+                    ngram.append(('w',word))
+                    okIdx = wordOkIdx
+                    errIdx = wordErrIdx
+                    susp = newWordSusp
                     continue
 
                 break
 
-            ngramStr = '_'.join(ngram)
+            ngramFlat = map(lambda x: x[1], ngram)
+            ngramStr = '_'.join(ngramFlat)
             formFile.write("%s %f %d %d\n" % (ngramStr, susp, len(okIdx), len(errIdx)))
         
             sentFile.write(ngramStr)
@@ -194,7 +204,7 @@ def run(options, args):
     formFile = open(args[3], "w")
 
     expandCorpus(args[1], wordsOk, tagsOk, wordsErr, tagsErr, sentFile,
-                 formFile, options.compete)
+                 formFile, options.debug)
 
     sys.stderr.write(" done!\n")
 
@@ -203,8 +213,8 @@ def run(options, args):
 
 if __name__ == "__main__":
     parser = OptionParser()
-    parser.add_option("-c", action="store_true", dest="compete",
-                      default=False, help = "Enable word/tag competition")
+    parser.add_option("-d", action="store_true", dest="debug",
+                      default=False, help = "Enable debugging output")
     (options, args) = parser.parse_args()
 
     run(options, args)
