@@ -12,6 +12,8 @@
 import math
 import sys
 
+from optparse import OptionParser
+
 def extractWordTags(line):
     wordTags = []
 
@@ -54,7 +56,7 @@ def extractWordTags(line):
     lineParts = line.strip().split()
     return map(lambda x: x.rsplit('/', 1), lineParts)
 
-def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFile):
+def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFile, compete = False):
     corpusFile = open(filename, 'r')
     wordTagCache = dict()
     wordWordCache = dict()
@@ -94,18 +96,24 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
                         wordTagCache[(ngram[0], tag, False)] = tagErrIdx
 
                 if len(tagErrIdx) == 0:
-                    newSusp = 0.0
+                    newTagSusp = 0.0
                 else:
-                    newSusp = float(len(tagErrIdx)) / (len(tagErrIdx) + len(tagOkIdx))
+                    newTagSusp = float(len(tagErrIdx)) / (len(tagErrIdx) + len(tagOkIdx))
 
                 ef = expansionFactor(len(tagErrIdx))
 
-                if newSusp > susp * ef:
-                    ngram.append(tag)
-                    okIdx = tagOkIdx
-                    errIdx = tagErrIdx
-                    susp = newSusp
-                    continue
+                tagExpandSuccess = False
+                if newTagSusp > susp * ef:
+                    # If we do not allow comptetition between the tag and
+                    # word completion, continue expansion for the next token.
+                    if not compete:
+                        ngram.append(tag)
+                        okIdx = tagOkIdx
+                        errIdx = tagErrIdx
+                        susp = newTagSusp
+                        continue
+
+                    tagExpandSuccess = True
 
                 # Try word expansion
                 word = wordTags[j][0]
@@ -131,16 +139,33 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
                         wordWordCache[(ngram[0], word, False)] = wordErrIdx
 
                 if len(wordErrIdx) == 0:
-                    break
+                    newWordSusp = 0.0
+                else:
+                    newWordSusp = float(len(wordErrIdx)) / (len(wordErrIdx) + len(wordOkIdx))
 
-                newSusp = float(len(wordErrIdx)) / (len(wordErrIdx) + len(wordOkIdx))
                 ef = expansionFactor(len(wordErrIdx))
 
-                if newSusp > susp * ef:
-                    ngram.append(word)
-                    okIdx = wordOkIdx
-                    errIdx = wordErrIdx
-                    susp = newSusp
+                if newWordSusp > susp * ef:
+                    # Set the new suspicion to the word expansion suspicion
+                    # if:
+                    #
+                    # - We are not competing (in this case, the tag expansion
+                    #   failed).
+                    # - We are competing, and expanding with a word gives
+                    #   a higher suspicion than expanding with a tag.
+                    if not compete or newWordSusp > newTagSusp:
+                        ngram.append(word)
+                        okIdx = wordOkIdx
+                        errIdx = wordErrIdx
+                        susp = newWordSusp
+                        continue
+
+                # Competing mode, and we are not using the word expansion.
+                if tagExpandSuccess:
+                    ngram.append(tag)
+                    okIdx = tagOkIdx
+                    errIdx = tagErrIdx
+                    susp = newTagSusp
                     continue
 
                 break
@@ -154,29 +179,32 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
         sentFile.write('\n')
                     
 
-def run():
-    if len(sys.argv) != 5:
+def run(options, args):
+    if len(args) != 4:
         print "Usage: %s good bad sent_out forms_out" % sys.argv[0]
         sys.exit(1)
 
     sys.stderr.write("Constructing hashtables...")
-    (wordsOk, tagsOk) = readCorpus(sys.argv[1])
-    (wordsErr, tagsErr) = readCorpus(sys.argv[2])
+    (wordsOk, tagsOk) = readCorpus(args[0])
+    (wordsErr, tagsErr) = readCorpus(args[1])
     sys.stderr.write(" done!\n")
 
     sys.stderr.write("Expanding sentences...")
-    sentFile = open(sys.argv[3], "w")
-    formFile = open(sys.argv[4], "w")
+    sentFile = open(args[2], "w")
+    formFile = open(args[3], "w")
 
-    expandCorpus(sys.argv[2], wordsOk, tagsOk, wordsErr, tagsErr, sentFile,
-                 formFile)
+    expandCorpus(args[1], wordsOk, tagsOk, wordsErr, tagsErr, sentFile,
+                 formFile, options.compete)
 
     sys.stderr.write(" done!\n")
 
     sentFile.close()
     formFile.close()
 
-#import cProfile 
 if __name__ == "__main__":
-    #cProfile.run('run()','profstats')
-    run()
+    parser = OptionParser()
+    parser.add_option("-c", action="store_true", dest="compete",
+                      default=False, help = "Enable word/tag competition")
+    (options, args) = parser.parse_args()
+
+    run(options, args)
