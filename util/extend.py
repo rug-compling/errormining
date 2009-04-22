@@ -1,13 +1,6 @@
 #!/usr/bin/python
 #
 # Word and part of speech expansion preprocessor script.
-#
-# To try:
-#
-# - Go for the best expansion, word or tag. If it is a tie, choose the
-#   one with the highest number of observations within unparsable
-#   sentences. 
-#
 
 import math
 import sys
@@ -56,13 +49,24 @@ def extractWordTags(line):
     lineParts = line.strip().split()
     return map(lambda x: x.rsplit('/', 1), lineParts)
 
-def sequenceRatio(wordsOk, tagsOk, wordsErr, tagsErr, seq):
+def sequenceRatio(bigramCache, wordsOk, tagsOk, wordsErr, tagsErr, seq):
     types = map(lambda x: x[0], seq)
     flat = map(lambda x: x[1], seq)
 
     okIdx = None
     errIdx = None
-    
+    fromCache = False
+
+    if len(seq) > 1:
+        okIdx = bigramCache.get((seq[0], seq[1], True))
+        errIdx = bigramCache.get((seq[0], seq[1], False))
+
+    if okIdx != None and errIdx != None:
+        seq = seq[2:]
+        types = types[2:]
+        flag = flat[2:]
+        fromCache = True
+
     for i in range(len(seq)):
         if types[i] == 'w':
             okMap = wordsOk
@@ -71,7 +75,7 @@ def sequenceRatio(wordsOk, tagsOk, wordsErr, tagsErr, seq):
             okMap = tagsOk
             errMap = tagsErr
 
-        if i == 0:
+        if i == 0 and not fromCache:
             okIdx = okMap.get(flat[i], set())
             errIdx = errMap.get(flat[i], set())
         else:
@@ -81,12 +85,21 @@ def sequenceRatio(wordsOk, tagsOk, wordsErr, tagsErr, seq):
             okIdx = newOkIdx.intersection(okMap.get(flat[i], set()))
             errIdx = newErrIdx.intersection(errMap.get(flat[i], set()))
 
+            if i == 1 and not fromCache and (len(okIdx) > 5 or len(errIdx) > 5):
+                bigramCache[(seq[0], seq[1], True)] = okIdx
+                bigramCache[(seq[0], seq[1], False)] = errIdx
+
+    if (len(okIdx) + len(errIdx)) == 0:
+        return 0.0
+
     return float(len(errIdx)) / (len(okIdx) + len(errIdx))
 
 
 def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFile, debug):
     corpusFile = open(filename, 'r')
     bigramCache = dict()
+
+    cnt = 0
 
     for line in corpusFile:
         wordTags = extractWordTags(line)
@@ -129,11 +142,12 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
                 ef = expansionFactor(len(tagErrIdx))
 
 
-                #secondGram = ngram[1:]
-                #secondGram.append(('t', tag))
-                #print sequenceRatio(wordsOk, tagsOk, wordsErr, tagsErr, secondGram)
+                secondGram = ngram[1:]
+                secondGram.append(('t', tag))
+                susp2 = sequenceRatio(bigramCache, wordsOk, tagsOk, wordsErr,
+                                      tagsErr, secondGram)
 
-                if newTagSusp > susp * ef:
+                if newTagSusp > susp * ef and newTagSusp > susp2 * ef:
                     ngram.append(('t',tag))
                     okIdx = tagOkIdx
                     errIdx = tagErrIdx
@@ -170,7 +184,13 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
 
                 ef = expansionFactor(len(wordErrIdx))
 
-                if newWordSusp > susp * ef:
+                secondGram = ngram[1:]
+                secondGram.append(('w', word))
+                susp2 = sequenceRatio(bigramCache, wordsOk, tagsOk, wordsErr,
+                                      tagsErr, secondGram)
+
+
+                if newWordSusp > susp * ef and newWordSusp > susp2 * ef:
                     ngram.append(('w',word))
                     okIdx = wordOkIdx
                     errIdx = wordErrIdx
@@ -186,7 +206,13 @@ def expandCorpus(filename, wordsOk, tagsOk, wordsErr, tagsErr, sentFile, formFil
             sentFile.write(ngramStr)
             sentFile.write(' ')
 
+        cnt += 1
+        if cnt % 100 == 0:
+            print '.',
+            sys.stdout.flush()
+
         sentFile.write('\n')
+    print
                     
 
 def run(options, args):
