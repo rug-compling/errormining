@@ -53,9 +53,11 @@ def sequenceRatio(bigramCache, wordsOk, tagsOk, wordsErr, tagsErr, seq):
     types = map(lambda x: x[0], seq)
     flat = map(lambda x: x[1], seq)
 
+    fromCache = False
+
     okIdx = None
     errIdx = None
-    fromCache = False
+
 
     if len(seq) > 1:
         okIdx = bigramCache.get((seq[0], seq[1], True))
@@ -64,7 +66,7 @@ def sequenceRatio(bigramCache, wordsOk, tagsOk, wordsErr, tagsErr, seq):
     if okIdx != None and errIdx != None:
         seq = seq[2:]
         types = types[2:]
-        flag = flat[2:]
+        flat = flat[2:]
         fromCache = True
 
     for i in range(len(seq)):
