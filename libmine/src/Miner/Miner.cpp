@@ -54,7 +54,7 @@ void Miner::calculateInitialFormSuspicions(double suspThreshold)
 		// observations of the form. Since all observations within parsable
 		// sentences have a suspicion of 0.0, they don't add to the sum,
 		// only the total number of observations.
-		double suspicion = formIter.value() / formIter.key()->nSuspObservations();
+		double suspicion = formIter.value() / formIter.key()->nObservations();
 		formIter.key()->setSuspicion(suspicion);
 	}
 
