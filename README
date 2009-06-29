@@ -6,8 +6,8 @@ Introduction
 ------------
 
 This program implements error mining in parsing results, as described
-in [1]. It is used to find n-grams that are suspicious for causing
-incomplete parses. In addition to unigrams and bigrams, larger
+in [1] and [2]. It is used to find n-grams that are suspicious for
+causing incomplete parses. In addition to unigrams and bigrams, larger
 problematic ngrams can also be mined.
 
 A viewer for the results of the error mining is also included. The
@@ -41,7 +41,7 @@ qmake with the '-spec macx-g++' option.
 
 To use the error miner, you will need perfect hash automata of the
 types occurring in parsable and unparsable sentences. These automata
-can be created with the fsa_build utility from Jan Daciuk [2].
+can be created with the fsa_build utility from Jan Daciuk [3].
 
 Creating a perfect hash automaton
 ---------------------------------
@@ -143,4 +143,7 @@ References
 1. Error mining in parsing results, Benoît Sagot and Éric de la Clergerie,
    Proceedings of the 21st International Conference on Computational
    Linguistics and the 44th annual meeting of the ACL, 2006
+2. A generalized method for iterative error mining in parsing results,
+   Daniël de Kok, Jianqiang Ma and Gertjan van Noord, ACL2009 Workshop
+   Grammar Engineering Across Frameworks
 2. http://www.eti.pg.gda.pl/katedry/kiw/pracownicy/Jan.Daciuk/personal/fsa.html
