@@ -1,14 +1,13 @@
 #include <cmath>
 #include <set>
 
-#include <tr1/memory>
-
 #include <QClipboard>
 #include <QDialog>
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QRegExp>
 #include <QSettings>
+#include <QSharedPointer>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QSqlQueryModel>
@@ -24,7 +23,6 @@
 #include "PreferencesDialog.hh"
 
 using namespace std;
-using namespace std::tr1;
 using namespace errormining;
 using namespace miningviewer;
 

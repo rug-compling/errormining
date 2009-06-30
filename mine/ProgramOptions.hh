@@ -1,11 +1,12 @@
 #ifndef PROGRAM_OPTIONS_HH_
 #define PROGRAM_OPTIONS_HH_
 
-#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+#include <QSharedPointer>
 
 #include <errormining/SuffixArray.hh>
 
@@ -44,7 +45,7 @@ private:
 	double d_suspThreshold;
 	double d_threshold;
 	bool d_verbose;
-	std::auto_ptr<std::vector<std::string> > d_arguments;
+	QSharedPointer<std::vector<std::string> > d_arguments;
 };
 
 template <typename T>

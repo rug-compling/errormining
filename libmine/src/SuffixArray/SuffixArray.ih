@@ -3,10 +3,7 @@
 #include <iterator>
 #include <vector>
 
-#include <tr1/memory>
-
 #include <errormining/SuffixArray.hh>
 #include <errormining/util/ssort.hh>
 
 using namespace std;
-using namespace std::tr1;

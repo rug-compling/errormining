@@ -62,7 +62,7 @@ void MinerMainWindow::formSelected(QTreeWidgetItem *item, QTreeWidgetItem *)
 	if (d_minerMainWindow.allSentenceMatchCheckBox->isChecked())
 	{
 		d_minerMainWindow.sentenceRegExpLineEdit->clear();
-		d_sentenceFilterRegExp.reset(0);
+		d_sentenceFilterRegExp.clear();
 	}
 
 	if (item == 0) {
@@ -119,7 +119,7 @@ void MinerMainWindow::regExpChanged()
 	// that the user doesn't want to apply any filtering. If so,
 	// deallocate the current regexp (if any).
 	if (regexStr.size() == 0)
-		d_filterRegExp.reset(0);
+		d_filterRegExp.clear();
 	else {
 		QRegExp *filterRegExp = new QRegExp(regexStr);
 
@@ -133,7 +133,7 @@ void MinerMainWindow::regExpChanged()
 			return;
 		}
 
-		d_filterRegExp.reset(filterRegExp);
+		d_filterRegExp = QSharedPointer<QRegExp>(filterRegExp);
 	}
 
 	// There could still be a message in the status bar about a
@@ -293,7 +293,7 @@ void MinerMainWindow::sentenceRegExpChanged()
 	// When the regexp string length is 0, change the pointer to the
 	// regexp to a null pointer to signal that no regexp should be used.
 	if (regexStr.size() == 0)
-		d_sentenceFilterRegExp.reset(0);
+		d_sentenceFilterRegExp.clear();
 	else {
 		QRegExp *sentenceFilterRegExp = new QRegExp(QString("(") + regexStr + ")");
 
@@ -307,7 +307,7 @@ void MinerMainWindow::sentenceRegExpChanged()
 			return;
 		}
 
-		d_sentenceFilterRegExp.reset(sentenceFilterRegExp);
+		d_sentenceFilterRegExp = QSharedPointer<QRegExp>(sentenceFilterRegExp);
 	}
 
 	// There could still be a message in the status bar about a
@@ -323,7 +323,7 @@ void MinerMainWindow::showForms()
 	d_minerMainWindow.formsTreeWidget->clear();
 
 	ScoringMethod curScoringMethod = scoringMethod();
-	shared_ptr<ScoreFun> scoreFun = selectScoreFun(curScoringMethod);
+	QSharedPointer<ScoreFun> scoreFun = selectScoreFun(curScoringMethod);
 
 	// Retrieve threshold preferences.
 	QSettings settings("RUG", "Mining Viewer");
@@ -341,17 +341,17 @@ void MinerMainWindow::showForms()
 
 	QList<QTreeWidgetItem *> items;
 
-	shared_ptr<QSqlQuery> query;
+	QSharedPointer<QSqlQuery> query;
 	if (suspThresholdMethod == AVG_MULTIPLIER_METHOD)
 	{
-		query.reset(new QSqlQuery("SELECT form, suspicion, suspFreq, uniqSentsFreq"
+		query = QSharedPointer<QSqlQuery>(new QSqlQuery("SELECT form, suspicion, suspFreq, uniqSentsFreq"
 			" FROM forms WHERE suspicion >= :avgMultiplier * (SELECT AVG(suspicion) FROM forms) "
 			" AND suspFreq >= :unparsableFreqThreshold AND freq >= :unparsableFreqThreshold"));
 		query->bindValue("avgMultiplier", avgMultiplier);
 	}
 	else
 	{
-		query.reset(new QSqlQuery("SELECT form, suspicion, suspFreq, uniqSentsFreq"
+		query = QSharedPointer<QSqlQuery>(new QSqlQuery("SELECT form, suspicion, suspFreq, uniqSentsFreq"
 			" FROM forms WHERE suspicion >= :suspThreshold"
 			" AND suspFreq >= :unparsableFreqThreshold AND freq >= :parsableFreqThreshold"));
 		query->bindValue("suspThreshold", suspThreshold);
@@ -370,7 +370,7 @@ void MinerMainWindow::showForms()
 
 		// If a regular expression was allocated, use it to filter forms;
 		// if this form does not match, skip it.
-		if (d_filterRegExp.get() != 0)
+		if (d_filterRegExp.data() != 0)
 			if (d_filterRegExp->indexIn(form) == -1)
 				continue;
 
@@ -421,7 +421,7 @@ void MinerMainWindow::updateSentenceList()
 	d_minerMainWindow.sentenceTextEdit->clear();
 
 	if (d_minerMainWindow.allSentenceMatchCheckBox->isChecked() &&
-		d_sentenceFilterRegExp.get() != 0)
+		d_sentenceFilterRegExp.data() != 0)
 	{
 		QSqlQuery sentenceQuery;
 		sentenceQuery.prepare("SELECT sentences.sentence FROM sentences"
@@ -432,7 +432,7 @@ void MinerMainWindow::updateSentenceList()
 		{
 			QString sentence = sentenceQuery.value(0).toString();
 			
-			if (d_sentenceFilterRegExp.get() != 0)
+			if (d_sentenceFilterRegExp.data() != 0)
 				if (d_sentenceFilterRegExp->indexIn(sentence) == -1)
 					continue;
 
@@ -465,7 +465,7 @@ void MinerMainWindow::updateSentenceList()
 		{
 			QString sentence = sentenceQuery.value(0).toString();
 			
-			if (d_sentenceFilterRegExp.get() != 0)
+			if (d_sentenceFilterRegExp.data() != 0)
 				if (d_sentenceFilterRegExp->indexIn(sentence) == -1)
 					continue;
 

@@ -3,8 +3,9 @@
 
 #include <algorithm>
 #include <iostream>
-#include <memory>
 #include <vector>
+
+#include <QSharedPointer>
 
 #include "SentenceHandler.hh"
 
@@ -49,7 +50,7 @@ public:
 private:
 	void readSentences(std::istream &in, double error);
 
-	std::auto_ptr<std::vector<SentenceHandler *> > d_handlers;
+	QSharedPointer<std::vector<SentenceHandler *> > d_handlers;
 };
 
 inline void TokenizedSentenceReader::addHandler(SentenceHandler *handler)

@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-#include <tr1/memory>
+#include <QSharedPointer>
 
 namespace errormining {
 
@@ -44,7 +44,7 @@ struct ScoreSuspLnUniqSents : public ScoreFun
 	double operator()(double suspicion, size_t suspFreq, size_t uniqSentsFreq) const;
 };
 
-std::tr1::shared_ptr<ScoreFun> selectScoreFun(ScoringMethod scoringMethod);
+QSharedPointer<ScoreFun> selectScoreFun(ScoringMethod scoringMethod);
 
 inline double ScoreSusp::operator()(double suspicion, size_t, size_t) const
 {

@@ -1,3 +1,9 @@
+Tue Jun 30 17:05:12 CEST 2009
+
+- Replace all remaining use of TR1 classes (primarily shared_ptr) by
+  Qt equivalents. The minor now requires Qt 4.5, but works without
+  TR1 support.
+
 Thu Jan 15 10:14:05 CET 2009
 
 - Fix some user interface glitches.

@@ -1,13 +1,13 @@
 #ifndef _MINER_MAINWINDOW_HH
 #define _MINER_MAINWINDOW_HH
 
-#include <memory>
 #include <set>
 
 #include <QListWidgetItem>
 #include <QMainWindow>
 #include <QModelIndex>
 #include <QRegExp>
+#include <QSharedPointer>
 #include <QString>
 #include <QTreeWidgetItem>
 #include <QWidget>
@@ -53,8 +53,8 @@ private:
 
 	Ui::MinerMainWindow d_minerMainWindow;
 	PreferencesDialog d_preferencesDialog;
-	std::auto_ptr<QRegExp> d_filterRegExp;
-	std::auto_ptr<QRegExp> d_sentenceFilterRegExp;
+	QSharedPointer<QRegExp> d_filterRegExp;
+	QSharedPointer<QRegExp> d_sentenceFilterRegExp;
 };
 
 }

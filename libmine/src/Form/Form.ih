@@ -3,6 +3,8 @@
 #include <iterator>
 #include <vector>
 
+#include <QSharedPointer>
+
 #include <errormining/Form.hh>
 
 using namespace std;

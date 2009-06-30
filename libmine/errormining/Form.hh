@@ -2,8 +2,9 @@
 #define _FORM_HH
 
 #include <iostream>
-#include <memory>
 #include <vector>
+
+#include <QSharedPointer>
 
 namespace errormining
 {
@@ -81,9 +82,9 @@ public:
 private:
 	void copy(Form const &other);
 
-	std::auto_ptr<std::vector<int> > d_ngram;
+        QSharedPointer<std::vector<int> > d_ngram;
 	double d_suspicion;
-	size_t d_unsuspObservations;
+        size_t d_unsuspObservations;
 	size_t d_suspObservations;
 };
 

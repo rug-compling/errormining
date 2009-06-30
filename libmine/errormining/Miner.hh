@@ -3,17 +3,15 @@
 
 #include <functional>
 #include <list>
-#include <memory>
 #include <numeric>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include <tr1/memory>
-
 #include <QHash>
 #include <QSet>
+#include <QSharedPointer>
 
 #include "Form.hh"
 #include "HashAutomaton.hh"
@@ -86,10 +84,10 @@ public:
 	 * @param allNgrams Analyze all n-grams (or just those that occur in
 	 *  unparsable sentences).
 	 */
-	Miner(std::tr1::shared_ptr<HashAutomaton const> parsableHashAutomaton,
-			std::tr1::shared_ptr<HashAutomaton const> unparsableHashAutomaton,
-			std::tr1::shared_ptr<SuffixArray<int> const > parsableSuffixArray,
-			std::tr1::shared_ptr<SuffixArray<int> const > unparsableSuffixArray,
+	Miner(QSharedPointer<HashAutomaton const> parsableHashAutomaton,
+			QSharedPointer<HashAutomaton const> unparsableHashAutomaton,
+			QSharedPointer<SuffixArray<int> const > parsableSuffixArray,
+			QSharedPointer<SuffixArray<int> const > unparsableSuffixArray,
 			size_t n = 1, size_t m = 1, bool ngramExpansion = true,
 			double expansionFactorAlpha = 0.0, bool smoothing = true, double smoothingBeta = 0.1) :
 		d_parsableHashAutomaton(parsableHashAutomaton),
@@ -178,19 +176,19 @@ private:
 
 	typedef QSet<FormPtr> FormPtrSet;
 
-	std::tr1::shared_ptr<HashAutomaton const> d_parsableHashAutomaton;
-	std::tr1::shared_ptr<HashAutomaton const> d_unparsableHashAutomaton;
-	std::tr1::shared_ptr<SuffixArray<int> const> d_goodSuffixArray;
-	std::tr1::shared_ptr<SuffixArray<int> const> d_badSuffixArray;
+	QSharedPointer<HashAutomaton const> d_parsableHashAutomaton;
+	QSharedPointer<HashAutomaton const> d_unparsableHashAutomaton;
+	QSharedPointer<SuffixArray<int> const> d_goodSuffixArray;
+	QSharedPointer<SuffixArray<int> const> d_badSuffixArray;
 	size_t d_n;
 	size_t d_m;
 	bool d_ngramExpansion;
 	bool d_expansionFactorAlpha;
 	bool d_smoothing;
 	double d_smoothingBeta;
-	std::auto_ptr<FormPtrSet> d_forms;
-	std::auto_ptr<std::list<Sentence> > d_sentences;
-	std::auto_ptr<QHash<int, double> > d_unigramRatioCache;
+	QSharedPointer<FormPtrSet> d_forms;
+	QSharedPointer<std::list<Sentence> > d_sentences;
+	QSharedPointer<QHash<int, double> > d_unigramRatioCache;
 };
 
 inline bool operator==(FormPtr lhs, FormPtr rhs)

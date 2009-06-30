@@ -5,10 +5,9 @@
 #include <string>
 #include <utility>
 
-#include <tr1/memory>
-
 #include <QCoreApplication>
 #include <QSet>
+#include <QSharedPointer>
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QString>
@@ -17,7 +16,6 @@
 #include <errormining/ScoringMethod.hh>
 
 using namespace std;
-using namespace std::tr1;
 using namespace errormining;
 
 struct FormScore
@@ -78,7 +76,7 @@ ScoringMethod selectScoringMethod(string const &scoringMethod)
 FormScoreSet scoreForms(ScoringMethod scoringMethod)
 {
 	FormScoreSet formScores;
-	shared_ptr<ScoreFun> scoreFun = selectScoreFun(scoringMethod);
+	QSharedPointer<ScoreFun> scoreFun = selectScoreFun(scoringMethod);
 
 	QSqlQuery query("SELECT form, suspicion, suspFreq, uniqSentsFreq"
 		" FROM forms");// WHERE suspicion > 1.5 * (SELECT AVG(suspicion) FROM forms)");

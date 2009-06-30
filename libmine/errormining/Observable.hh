@@ -2,8 +2,9 @@
 #define _OBSERVABLE_HH
 
 #include <algorithm>
-#include <memory>
 #include <vector>
+
+#include <QSharedPointer>
 
 namespace errormining
 {
@@ -19,7 +20,7 @@ class Observer;
  */
 class Observable
 {
-	std::auto_ptr<std::vector<Observer *> > d_observers;
+	QSharedPointer<std::vector<Observer *> > d_observers;
 public:
 	/**
 	 * Construct an observable class.

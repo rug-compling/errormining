@@ -19,7 +19,7 @@ ostream &errormining::operator<<(ostream &out, Form const &form)
 
 void Form::copy(Form const &other)
 {
-	d_ngram.reset(new vector<int>(*other.d_ngram));
+	d_ngram = QSharedPointer<vector<int> >(new vector<int>(*other.d_ngram));
 	d_suspicion = other.d_suspicion;
 	d_unsuspObservations = other.d_unsuspObservations;
 	d_suspObservations = other.d_suspObservations;

@@ -3,8 +3,9 @@
 
 #include "Form.hh"
 
-#include <memory>
 #include <vector>
+
+#include <QSharedPointer>
 
 namespace errormining
 {
@@ -55,7 +56,7 @@ private:
 	void copy(Sentence const &other);
 
 	double d_error;
-	std::auto_ptr<std::vector<Form const *> > d_forms;
+	QSharedPointer<std::vector<Form const *> > d_forms;
 };
 
 inline Sentence::Sentence(Sentence const &other)

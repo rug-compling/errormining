@@ -2,10 +2,9 @@
 #include <iostream>
 #include <iterator>
 #include <fstream>
-#include <memory>
 #include <vector>
 
-#include <tr1/memory>
+#include <QSharedPointer>
 
 #include <errormining/HashedCorpus.hh>
 #include <errormining/Miner.hh>
@@ -17,7 +16,6 @@
 #include "ProgramOptions.hh"
 
 using namespace std;
-using namespace std::tr1;
 using namespace errormining;
 
 class CycleNotifier : public Observer
@@ -53,9 +51,9 @@ void usage(string const &programName)
 			endl << "  fsa_build -N -o oks.fsa" << endl << endl;
 }
 
-shared_ptr<HashedCorpus> readHashedCorpus(ProgramOptions const &programOptions,
-		shared_ptr<HashAutomaton> parsableHashAutomaton,
-		shared_ptr<HashAutomaton> unparsableHashAutomaton)
+QSharedPointer<HashedCorpus> readHashedCorpus(ProgramOptions const &programOptions,
+		QSharedPointer<HashAutomaton> parsableHashAutomaton,
+		QSharedPointer<HashAutomaton> unparsableHashAutomaton)
 {
 	ifstream badIn(programOptions.arguments()[3].c_str());
 	if (!badIn.good())
@@ -67,9 +65,9 @@ shared_ptr<HashedCorpus> readHashedCorpus(ProgramOptions const &programOptions,
 
 	TokenizedSentenceReader reader;
 
-	shared_ptr<HashedCorpus> hashedCorpus(new HashedCorpus(parsableHashAutomaton,
+	QSharedPointer<HashedCorpus> hashedCorpus(new HashedCorpus(parsableHashAutomaton,
 			unparsableHashAutomaton));
-	reader.addHandler(hashedCorpus.get());
+	reader.addHandler(hashedCorpus.data());
 
 	reader.read(goodIn, badIn);
 
@@ -78,10 +76,10 @@ shared_ptr<HashedCorpus> readHashedCorpus(ProgramOptions const &programOptions,
 
 int main(int argc, char *argv[])
 {
-	auto_ptr<ProgramOptions> programOptions;
+	QSharedPointer<ProgramOptions> programOptions;
 	try
 	{
-		programOptions.reset(new ProgramOptions(argc, argv));
+		programOptions = QSharedPointer<ProgramOptions>(new ProgramOptions(argc, argv));
 	}
 	catch (string error)
 	{
@@ -97,11 +95,13 @@ int main(int argc, char *argv[])
 	}
 
 	// Read the perfect hash automaton.
-	shared_ptr<HashAutomaton> parsableHashAutomaton;
-	shared_ptr<HashAutomaton> unparsableHashAutomaton;
+	QSharedPointer<HashAutomaton> parsableHashAutomaton;
+	QSharedPointer<HashAutomaton> unparsableHashAutomaton;
 	try {
-		parsableHashAutomaton.reset(new HashAutomaton(programOptions->arguments()[0]));
-		unparsableHashAutomaton.reset(new HashAutomaton(programOptions->arguments()[1]));
+		parsableHashAutomaton = QSharedPointer<HashAutomaton>(
+				new HashAutomaton(programOptions->arguments()[0]));
+		unparsableHashAutomaton = QSharedPointer<HashAutomaton>(
+				new HashAutomaton(programOptions->arguments()[1]));
 	} catch (InvalidAutomatonException e) {
 		cout << e.what() << endl;
 		return 1;
@@ -110,16 +110,16 @@ int main(int argc, char *argv[])
 	// Read the corpus as a sequence of hash codes.
 	if (programOptions->verbose())
 		cerr << "Reading and hashing the corpus... ";
-	shared_ptr<HashedCorpus> hashedCorpus = readHashedCorpus(*programOptions,
+	QSharedPointer<HashedCorpus> hashedCorpus = readHashedCorpus(*programOptions,
 			parsableHashAutomaton, unparsableHashAutomaton);
 	if (programOptions->verbose())
 		cerr << "Done!" << endl << "Creating suffix arrays... ";
 
 	// Store the corpora as suffix arrays.
-	shared_ptr<SuffixArray<int> >
+	QSharedPointer<SuffixArray<int> >
 		goodSuffixArray(new SuffixArray<int>(
 				hashedCorpus->good(), programOptions->sortAlgorithm()));
-	shared_ptr<SuffixArray<int> >
+	QSharedPointer<SuffixArray<int> >
 		badSuffixArray(new SuffixArray<int>(
 				hashedCorpus->bad(), programOptions->sortAlgorithm()));
 
@@ -137,10 +137,10 @@ int main(int argc, char *argv[])
 	reader.addHandler(&miner);
 
 	// Observe the mining process, if we want verbose output.
-	auto_ptr<CycleNotifier> cycleNotifier;
+	QSharedPointer<CycleNotifier> cycleNotifier;
 	if (programOptions->verbose()) {
-		cycleNotifier.reset(new CycleNotifier());
-		miner.attach(cycleNotifier.get());
+		cycleNotifier = QSharedPointer<CycleNotifier>(new CycleNotifier());
+		miner.attach(cycleNotifier.data());
 	}
 
 	ifstream badIn(programOptions->arguments()[3].c_str());

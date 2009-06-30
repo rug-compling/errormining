@@ -26,7 +26,7 @@ vector<size_t> const *SuffixArray<int>::genSuffixArray(
 	// sort algorithm by McIlroy and McIlroy.
 
 	// ssort initially requires the original sequence of suffixes.
-	shared_ptr<vector<int> > suffixArray(new vector<int>(data));
+	QSharedPointer<vector<int> > suffixArray(new vector<int>(data));
 
 	// The hash automaton returns [0..k-1] for k different words. ssort
 	// uses 0 as an end of sequence marker and thus expects hashcodes
@@ -39,7 +39,7 @@ vector<size_t> const *SuffixArray<int>::genSuffixArray(
 
 	// Create the suffix array. While we'll pass the data array, ssort
 	// will modify it to be the suffix array.
-	errormining::util::ssort(suffixArray.get());
+	errormining::util::ssort(suffixArray.data());
 
 	suffixArray->pop_back();
 

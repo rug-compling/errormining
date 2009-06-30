@@ -27,10 +27,10 @@
 #define SUFFIXARRAY_HH
 
 #include <algorithm>
-#include <memory>
 #include <utility>
 #include <vector>
-#include <tr1/memory>
+
+#include <QSharedPointer>
 
 namespace errormining {
 
@@ -61,7 +61,7 @@ public:
 	 * @param data This vector will be copied, and used as the backing vector
 	 *  for the suffix array.
 	 */
-	SuffixArray(std::tr1::shared_ptr<std::vector<T> const> const &data) :
+	SuffixArray(QSharedPointer<std::vector<T> const> const &data) :
 		d_data(data), d_suffixArray(genSuffixArray(*d_data)),
 		d_compareFun(SuffixCompare<T>(d_data.get())) {}
 
@@ -76,11 +76,11 @@ public:
 	 * @param data This vector will be copied, and used as the backing vector
 	 *  for the suffix array.
 	 */
-	SuffixArray(std::tr1::shared_ptr<std::vector<int> const> const &data,
+	SuffixArray(QSharedPointer<std::vector<int> const> const &data,
 			SortAlgorithm sortAlgorithm) :
 		d_data(data),
 		d_suffixArray(genSuffixArray(*d_data, sortAlgorithm)),
-		d_compareFun(SuffixCompare<int>(d_data.get())) {}
+		d_compareFun(SuffixCompare<int>(d_data.data())) {}
 
 	/**
 	 * Recreate a suffix array from a previously created suffix array vector.
@@ -135,8 +135,8 @@ private:
 	std::vector<size_t> const *genSuffixArray(std::vector<int> const &data,
 			SortAlgorithm sortAlgorithm) const;
 
-	std::tr1::shared_ptr<std::vector<T> const> d_data;
-	std::auto_ptr<std::vector<size_t> const> d_suffixArray;
+	QSharedPointer<std::vector<T> const> d_data;
+	QSharedPointer<std::vector<size_t> const> d_suffixArray;
 	SuffixCompare<T> d_compareFun;
 };
 
@@ -144,8 +144,8 @@ template <typename T>
 SuffixArray<T> &SuffixArray<T>::operator=(SuffixArray<T> const &other)
 {
 	if (this != &other) {
-		d_data.reset(new std::vector<T>(*other.d_data));
-		d_suffixArray.reset(new std::vector<size_t>(*other.d_suffixArray));
+		d_data = QSharedPointer<std::vector<T> >(new std::vector<T>(*other.d_data));
+		d_suffixArray = QSharedPointer<std::vector<size_t> >(new std::vector<size_t>(*other.d_suffixArray));
 		d_compareFun = SuffixCompare<T>(d_data.get());
 	}
 

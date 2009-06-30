@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <string>
 
-#include <tr1/memory>
+#include <QSharedPointer>
 
 #include <fadd/fadd.h>
 
@@ -59,7 +59,7 @@ public:
 	 */
 	bool good() const;
 private:
-	std::tr1::shared_ptr<fsa> d_fsa;
+	QSharedPointer<fsa> d_fsa;
 };
 
 inline int HashAutomaton::operator()(std::string const &word) const

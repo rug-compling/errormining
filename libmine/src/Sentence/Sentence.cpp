@@ -11,5 +11,6 @@ Sentence &Sentence::operator=(Sentence const &other)
 void Sentence::copy(Sentence const &other)
 {
 	d_error = other.d_error;
-	d_forms.reset(new vector<Form const *>(*other.d_forms));
+	d_forms = QSharedPointer<vector<Form const *> >(
+			new vector<Form const *>(*other.d_forms));
 }

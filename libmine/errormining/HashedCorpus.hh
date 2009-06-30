@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include <tr1/memory>
+#include <QSharedPointer>
 
 #include "HashAutomaton.hh"
 #include "SentenceHandler.hh"
@@ -25,8 +25,8 @@ public:
 	 * @param hashAutomaton A shared pointer to the perfect hash automaton
 	 *  to use.
 	 */
-	HashedCorpus(std::tr1::shared_ptr<HashAutomaton const> parsableHashAutomaton,
-			std::tr1::shared_ptr<HashAutomaton const> unparsableHashAutomaton) :
+	HashedCorpus(QSharedPointer<HashAutomaton const> parsableHashAutomaton,
+			QSharedPointer<HashAutomaton const> unparsableHashAutomaton) :
 		d_parsableHashAutomaton(parsableHashAutomaton),
 		d_unparsableHashAutomaton(unparsableHashAutomaton),
 		d_goodCorpus(new std::vector<int>),
@@ -35,29 +35,29 @@ public:
 	/**
 	 * Get the corpus of unparsable sentences.
 	 */
-	std::tr1::shared_ptr<std::vector<int> const> bad() const;
+	QSharedPointer<std::vector<int> const> bad() const;
 
 	/**
 	 * Get the corpus of parsable sentences.
 	 */
-	std::tr1::shared_ptr<std::vector<int> const> good() const;
+	QSharedPointer<std::vector<int> const> good() const;
 	void handleSentence(std::vector<std::string> const &tokens,
 			double error);
 private:
 	HashedCorpus(HashedCorpus const &other);
 	HashedCorpus &operator=(HashedCorpus const &other);
-	std::tr1::shared_ptr<HashAutomaton const> d_parsableHashAutomaton;
-	std::tr1::shared_ptr<HashAutomaton const> d_unparsableHashAutomaton;
-	std::tr1::shared_ptr<std::vector<int> > d_goodCorpus;
-	std::tr1::shared_ptr<std::vector<int> > d_badCorpus;
+	QSharedPointer<HashAutomaton const> d_parsableHashAutomaton;
+	QSharedPointer<HashAutomaton const> d_unparsableHashAutomaton;
+	QSharedPointer<std::vector<int> > d_goodCorpus;
+	QSharedPointer<std::vector<int> > d_badCorpus;
 };
 
-inline std::tr1::shared_ptr<std::vector<int> const> HashedCorpus::bad() const
+inline QSharedPointer<std::vector<int> const> HashedCorpus::bad() const
 {
 	return d_badCorpus;
 }
 
-inline std::tr1::shared_ptr<std::vector<int> const> HashedCorpus::good() const
+inline QSharedPointer<std::vector<int> const> HashedCorpus::good() const
 {
 	return d_goodCorpus;
 }

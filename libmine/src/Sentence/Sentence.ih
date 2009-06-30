@@ -1,3 +1,5 @@
+#include <QSharedPointer>
+
 #include <errormining/Sentence.hh>
 
 using namespace std;
