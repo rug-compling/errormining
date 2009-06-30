@@ -21,16 +21,15 @@ Compilation
 
 Requirements:
 
-- A C++ standard library that includes support for the TR1 shared_ptr
-  class. A recent version of GNU gcc will do fine.
-- Qt 4.x - Qt4 is included with most modern GNU/Linux distributions.
+- Qt 4.5 or later - Qt4 is included with most GNU/Linux distributions.
   Installers for Mac OS X and Microsoft Windows are available from:
-	http://www.qtsoftware.com/
+
+  http://www.qtsoftware.com/
 
 Tested configurations:
 
-- Debian GNU/Linux (Lenny), g++ 4.3.2, Qt 4.4.0
-- Mac OS X 10.5, g++ 4.0.1, Qt 4.4.3
+- Debian GNU/Linux (Lenny), g++ 4.3.2, Qt 4.5.0
+- Mac OS X 10.5, g++ 4.0.1, Qt 4.5.2
 
 Qt includes a tool for generating native build infrastructure, named
 'qmake'. Executing 'qmake' in the main source directory will generate
@@ -123,8 +122,8 @@ Licensing
 - Jan Daciuk's Fadd library, which is included in a slightly modified form
   in the 'fadd' directory, is licensed under the LGPL.
 - The error miner and viewer are licensed under the LGPL. Please note that
-  the miner requires the Qt library, which is licensed under the GPL
-	version 2 or 3.
+  the miner requires the Qt library, which is available under the LGPL 2.1
+  license.
 - The sample corpus is licensed under the GNU Free Documentation License,
   please refer to Examples/README for more information.
 
