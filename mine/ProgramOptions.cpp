@@ -1,10 +1,10 @@
 #include "ProgramOptions.ih"
 
 ProgramOptions::ProgramOptions(int argc, char *argv[])
-	: d_n(1), d_ngramExpansion(true), d_expansionFactorAlpha(0.0),
+	: d_n(1), d_ngramExpansion(true), d_expansionFactorAlpha(1.0),
 	d_frequency(2), d_smoothing(false), d_smoothingBeta(0.1),
 	d_sortAlgorithm(SuffixArray<int>::SSORT), d_suspFrequency(0),
-	d_suspThreshold(0.0), d_threshold(0.001), d_verbose(false),
+	d_suspThreshold(0.001), d_threshold(0.001), d_verbose(false),
 	d_arguments(new vector<string>())
 {
 	d_programName = argv[0];
