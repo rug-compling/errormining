@@ -49,6 +49,7 @@ private:
 	void showForms();
 	errormining::ScoringMethod scoringMethod();
 	void updateSentenceList();
+	void updateStatistics();
 	void writeSettings();
 
 	Ui::MinerMainWindow d_minerMainWindow;

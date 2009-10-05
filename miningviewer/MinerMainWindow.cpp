@@ -5,6 +5,7 @@ MinerMainWindow::MinerMainWindow(QWidget *parent) : QMainWindow(parent)
 	d_minerMainWindow.setupUi(this);
 
 	readSettings();
+	updateStatistics();
 
 	d_minerMainWindow.formsTreeWidget->sortByColumn(0, Qt::DescendingOrder);
 
@@ -257,6 +258,8 @@ bool MinerMainWindow::removeForm(QString const &form)
 	}
 
 	removeStaleForms(affectedFormIds);
+	
+	updateStatistics();
 
 	return true;
 }
@@ -480,6 +483,15 @@ void MinerMainWindow::updateSentenceList()
 	}
 
 	d_minerMainWindow.sentenceTextEdit->moveCursor(QTextCursor::Start);
+}
+
+void MinerMainWindow::updateStatistics()
+{
+	QSqlQuery formsQuery;
+	formsQuery.exec("SELECT COUNT(*) FROM forms");
+	formsQuery.next();
+	QString formFreq = formsQuery.value(0).toString();
+	d_minerMainWindow.statusbar->showMessage("Database contains " + formFreq + " forms");
 }
 
 void MinerMainWindow::writeSettings()
