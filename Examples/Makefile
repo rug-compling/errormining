@@ -1,8 +1,10 @@
 FSABUILD=/storage/dekok/aps/32/bin/fsa_build
 EMPATH=../
 
+all: nlwikipedia-sample.db
+
 %.mined : %.oks %.mistakes %.oks-fsa %.mistakes-fsa
-	$(EMPATH)/bin/mine -v -s 0.001  $*.oks-fsa $*.mistakes-fsa $*.oks $*.mistakes > $*.mined
+	$(EMPATH)/bin/mine -s 0.001  $*.oks-fsa $*.mistakes-fsa $*.oks $*.mistakes > $*.mined
 
 %.db : %.mined %.mistakes
 	$(EMPATH)/bin/createminedb $*.mined $*.mistakes $*.db
@@ -22,3 +24,6 @@ EMPATH=../
 
 %.mistakes : %.q
 	zcat $*.q | $(ALPINO_HOME)/bin/q -m | sort -u > $*.mistakes
+
+clean:
+	rm -f *.mined *.db *-fsa
