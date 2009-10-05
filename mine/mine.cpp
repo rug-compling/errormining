@@ -42,10 +42,10 @@ void usage(string const &programName)
 			"  -n n\t\tUse ngrams of length n" << endl <<
 			"  -m m\t\tCreate ngrams upto length m (only used with -c)" << endl <<
 			"  -o alg\tSort algorithm (stlsort or ssort, default: ssort)" << endl <<
+			"  -q\t\tBe quiet" << endl <<
 			"  -s t\t\tSuspicion threshold for excluding suspicious observations" << endl <<
 			"  -t t\t\tThreshold for determining the fixed-point" << endl <<
-			"  -u freq\tShow forms observed >= freq in unparsable sentences" << endl <<
-			"  -v \t\tVerbose output" << endl << endl <<
+			"  -u freq\tShow forms observed >= freq in unparsable sentences" << endl << endl <<
 			"The perfect hash automata can be created with fsa_build:" << endl << endl <<
 			"tr -s '\\012\\011 ' '\\012' < oks.txt | LANG=POSIX LC_ALL=POSIX sort -u | \\" <<
 			endl << "  fsa_build -N -o oks.fsa" << endl << endl;
