@@ -3,6 +3,10 @@
 
 #include <QClipboard>
 #include <QDialog>
+#include <QErrorMessage>
+#include <QFile>
+#include <QFileDialog>
+#include <QIODevice>
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QRegExp>
@@ -12,6 +16,7 @@
 #include <QSqlQuery>
 #include <QSqlQueryModel>
 #include <QTextDocument>
+#include <QTextStream>
 #include <QTreeWidgetItem>
 #include <QWidget>
 

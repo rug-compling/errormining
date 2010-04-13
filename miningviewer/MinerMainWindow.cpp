@@ -24,6 +24,8 @@ MinerMainWindow::MinerMainWindow(QWidget *parent) : QMainWindow(parent)
 		this, SLOT(formSelected(QTreeWidgetItem *, QTreeWidgetItem *)));
 	connect(d_minerMainWindow.removeFormPushButton, SIGNAL(clicked()),
 		this, SLOT(removeSelectedForms()));
+	connect(d_minerMainWindow.saveAction, SIGNAL(activated()),
+		this, SLOT(saveForms()));
 	
 
 	// Regular expression LineEdits.
@@ -282,6 +284,84 @@ void MinerMainWindow::removeStaleForms(std::set<int> const &affectedFormIds)
 	}
 
 	QSqlDatabase::database().commit();
+}
+
+//#include <iostream>
+
+void MinerMainWindow::saveForms()
+{
+	QString filename = QFileDialog::getSaveFileName(this);
+	if (filename.isNull())
+		return;
+
+	QFile formsFile(filename);
+	if (!formsFile.open(QIODevice::WriteOnly))
+	{
+		QErrorMessage msg(this);
+		msg.showMessage("Could not open file for writing!");
+		return;
+	}
+
+	QTextStream formsOut(&formsFile);
+
+	ScoringMethod curScoringMethod = scoringMethod();
+	QSharedPointer<ScoreFun> scoreFun = selectScoreFun(curScoringMethod);
+
+	// Retrieve threshold preferences.
+	QSettings settings("RUG", "Mining Viewer");
+	double suspThreshold = settings.value(SUSP_THRESHOLD_SETTING,
+		SUSP_THRESHOLD_SETTING_DEFAULT).toDouble();
+	double avgMultiplier = settings.value(AVG_MULTIPLIER_SETTING,
+		AVG_MULTIPLIER_SETTING_DEFAULT).toDouble();
+	QString suspThresholdMethod = settings.value(THRESHOLD_METHOD_SETTING,
+		SUSP_THRESHOLD_METHOD_DEFAULT).toString();
+	uint unparsableFreqThreshold =
+		settings.value(UNPARSABLE_FREQ_THRESHOLD_SETTING,
+			UNPARSABLE_FREQ_THRESHOLD_DEFAULT).toUInt();
+	uint parsableFreqThreshold =
+		settings.value(FREQ_THRESHOLD_SETTING, FREQ_THRESHOLD_DEFAULT).toUInt();
+
+	QSharedPointer<QSqlQuery> query;
+	if (suspThresholdMethod == AVG_MULTIPLIER_METHOD)
+	{
+		query = QSharedPointer<QSqlQuery>(new QSqlQuery("SELECT form, suspicion, suspFreq, uniqSentsFreq"
+			" FROM forms WHERE suspicion >= :avgMultiplier * (SELECT AVG(suspicion) FROM forms) "
+			" AND suspFreq >= :unparsableFreqThreshold AND freq >= :unparsableFreqThreshold"));
+		query->bindValue("avgMultiplier", avgMultiplier);
+	}
+	else
+	{
+		query = QSharedPointer<QSqlQuery>(new QSqlQuery("SELECT form, suspicion, freq, suspFreq, uniqSentsFreq"
+			" FROM forms WHERE suspicion >= :suspThreshold"
+			" AND suspFreq >= :unparsableFreqThreshold AND freq >= :parsableFreqThreshold"));
+		query->bindValue("suspThreshold", suspThreshold);
+	}
+
+	query->bindValue(":unparsableFreqThreshold", unparsableFreqThreshold);
+	query->bindValue(":parsableFreqThreshold", parsableFreqThreshold);
+	query->exec();
+
+	while (query->next())
+	{
+		QString form = query->value(0).toString();
+		double suspicion = query->value(1).toDouble();
+		uint freq = query->value(2).toUInt();
+		uint suspFreq = query->value(3).toUInt();
+		uint uniqSentsFreq = query->value(4).toUInt();
+
+		// If a regular expression was allocated, use it to filter forms;
+		// if this form does not match, skip it.
+		if (d_filterRegExp.data() != 0)
+			if (d_filterRegExp->indexIn(form) == -1)
+				continue;
+
+		// Score this form.
+		double score = (*scoreFun)(suspicion, suspFreq, uniqSentsFreq);
+
+		formsOut << form << " " << score << " " << freq << " " << suspFreq << "\n";
+	}
+
+	formsOut.flush();
 }
 
 void MinerMainWindow::scoringMethodChanged(int)
