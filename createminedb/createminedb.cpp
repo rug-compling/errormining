@@ -15,6 +15,7 @@
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>
+#include <QTextStream>
 #include <QVariant>
 #include <QtDebug>
 
@@ -58,13 +59,14 @@ size_t addResults(char const *resultsFilename)
 	QFile resultsFile(resultsFilename);
 	if (!resultsFile.open(QIODevice::ReadOnly | QIODevice::Text))
 		return 0;
+	QTextStream resultsStream(&resultsFile);
 
 	QSqlDatabase::database().transaction();
 
 	size_t longestNgram = 0;
-	while (!resultsFile.atEnd())
+	while (!resultsStream.atEnd())
 	{
-		QString line = resultsFile.readLine().trimmed();
+		QString line = resultsStream.readLine().trimmed();
 		QStringList lineParts = line.split(" ");
 
 		if (lineParts.size() < 4)
@@ -113,6 +115,7 @@ list<pair<uint, uint> > addSentences(char const *filename, bool unparsable, int 
 	QFile sentenceFile(filename);
 	if (!sentenceFile.open(QIODevice::ReadOnly | QIODevice::Text))
 		throw runtime_error(string("Could not open sentence file: ") + filename);
+	QTextStream sentenceStream(&sentenceFile);
 
 	// Prepare sentence insertion query.
 	QSqlQuery insertSentenceQuery;
@@ -124,9 +127,9 @@ list<pair<uint, uint> > addSentences(char const *filename, bool unparsable, int 
 
 	list<pair<uint, uint> > formSentencePairs;
 	QSqlDatabase::database().transaction();
-	while (!sentenceFile.atEnd())
+	while (!sentenceStream.atEnd())
 	{
-		QString sentence = sentenceFile.readLine().trimmed();
+		QString sentence = sentenceStream.readLine().trimmed();
 
 		QStringList words = sentence.split(" ");
 
