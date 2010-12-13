@@ -201,7 +201,7 @@ void expandCorpus(QTextStream *corpusStream, Positions const &goodPositions,
         IndexSet newTagGoodIdx;
         IndexSet newTagBadIdx;
 
-        if (ngram.size() == 0) {
+        if (ngram.size() == 1) {
             BigramCache::const_iterator goodIter;
             if ((goodIter = goodBigramCache.find(Bigram(ngram[0], tags[j]))) !=
                 goodBigramCache.end())
@@ -227,7 +227,7 @@ void expandCorpus(QTextStream *corpusStream, Positions const &goodPositions,
           tagGoodIdx = newGoodIdx.intersect(goodPositions.tagPositions[tags[j].unigram]);
           tagBadIdx = newBadIdx.intersect(badPositions.tagPositions[tags[j].unigram]);
 
-          if (ngram.size() == 1 && (goodIdx.size() > 5 || badIdx.size() > 5)) {
+          if (ngram.size() == 1 && (tagGoodIdx.size() > 5 || tagBadIdx.size() > 5)) {
             Bigram bigram(ngram[0], tags[1]);
             goodBigramCache[bigram] = tagGoodIdx;
             badBigramCache[bigram] = tagBadIdx;
@@ -287,7 +287,7 @@ void expandCorpus(QTextStream *corpusStream, Positions const &goodPositions,
           wordGoodIdx = newGoodIdx.intersect(goodPositions.wordPositions[words[j].unigram]);
           wordBadIdx = newBadIdx.intersect(badPositions.wordPositions[words[j].unigram]);
 
-          if (ngram.size() == 1 && (goodIdx.size() > 5 || badIdx.size() > 5)) {
+          if (ngram.size() == 1 && (wordGoodIdx.size() > 5 || wordBadIdx.size() > 5)) {
             Bigram bigram(ngram[0], words[1]);
             goodBigramCache[bigram] = wordGoodIdx;
             badBigramCache[bigram] = wordBadIdx;
@@ -335,6 +335,8 @@ void expandCorpus(QTextStream *corpusStream, Positions const &goodPositions,
      }
 
      *sentStream << "\n";
+     QTextStream out(stdout);
+     out << "\n";
   }
 }
 
