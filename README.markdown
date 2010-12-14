@@ -49,8 +49,8 @@ The miner requires perfect hash automata for all types that occur
 in parsable and unparsable sentences. An automaton can be created
 in the following manner:
 
- tr -s '\012\011 ' '\012' < sentence_file | \
- 	LANG=POSIX LC_ALL=POSIX sort -u | fsa_build -N -o dict.fsa
+    tr -s '\012\011 ' '\012' < sentence_file | \
+      LANG=POSIX LC_ALL=POSIX sort -u | fsa_build -N -o dict.fsa
 
 This step should be performed for creating an automaton for parsable
 sentences, and one for unparsable sentences.
@@ -61,28 +61,28 @@ Mining
 Usage information can be obtained by running the miner without any
 options:
 
- ./mine
+    ./mine
 
 If you don't want to adjust the default parameters, you can start
 mining parses by providing a perfect hash automaton, and files
 with parsable and unparsable sentences:
 
- ./mine parsable.fsa unparsable.fsa parsable-sentences unparsable-sentences
+    ./mine parsable.fsa unparsable.fsa parsable-sentences unparsable-sentences
 
 The output format consists of the following elements:
 
- [ngram] [suspicion] [f(ngram)] [f_unparsable(ngram)]
+    [ngram] [suspicion] [f(ngram)] [f_unparsable(ngram)]
 
 For example:
 
- me blijft 1.0 4 4
+    me blijft 1.0 4 4
 
 It is recommended to use the '-s threshold' option to exclude forms
 with a very low suspicion, and the '-e factor' option to use an
 expansion factor. A good default is:
 
- ./mine -s 0.001 -e 1.0 parsable.fsa unparsable.fsa parsable-sentences \
- 	unparsable-sentences
+    ./mine -s 0.001 -e 1.0 parsable.fsa unparsable.fsa parsable-sentences \
+      unparsable-sentences
 
 Viewing
 -------
