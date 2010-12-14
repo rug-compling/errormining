@@ -46,6 +46,30 @@ inline uint qHash(Unigram const &unigram)
   return ((h1 << 16) | (h1 >> 16)) ^ h2;
 }
 
+template <typename T>
+QSharedPointer<QSet<T> > intersect_set(QSharedPointer<QSet<T> > const a,
+    QSharedPointer<QSet<T> > const b) {
+  QSharedPointer<QSet<T> > small;
+  QSharedPointer<QSet<T> > big;
+
+  if (a->size() > b->size()) {
+    big = a;
+    small = b;
+  } else {
+    big = b;
+    small = a;
+  }
+
+  QSharedPointer<QSet<T> > inter(new QSet<T>);
+  for (typename QSet<T>::const_iterator iter = small->begin();
+      iter != small->end();
+      ++iter)
+    if (big->contains(*iter))
+      inter->insert(*iter);
+
+  return inter;
+}
+
 
 typedef QPair<Unigram, Unigram> Bigram;
 
@@ -147,14 +171,11 @@ double sequenceRatio(BigramCache *goodCache, BigramCache *badCache,
             iter != badIdx->end(); ++iter)
         newBadIdx->insert(*iter + 1);
 
-      goodIdx = QSharedPointer<IndexSet>(
-          new IndexSet(newGoodIdx->intersect(*goodHash->value(seq[i].unigram,
-                defaultSet())))
-      );
-      badIdx = QSharedPointer<IndexSet>(
-          new IndexSet(newBadIdx->intersect(*badHash->value(seq[i].unigram,
-                defaultSet())))
-      );
+      goodIdx = intersect_set(goodHash->value(seq[i].unigram,
+        defaultSet()), newGoodIdx);
+
+      badIdx = intersect_set(newBadIdx, badHash->value(seq[i].unigram,
+        defaultSet()));
 
       if (i == 1 && (goodIdx->size() > 5 || badIdx->size() > 5)) {
         Bigram bigram(seq[0], seq[1]);
@@ -242,12 +263,11 @@ void expandCorpus(QTextStream *corpusStream, Positions const &goodPositions,
               iter != badIdx->end(); ++iter)
             newBadIdx->insert(*iter + 1);
 
-          tagGoodIdx = QSharedPointer<IndexSet>(
-              new IndexSet(newGoodIdx->intersect(*goodPositions.tagPositions.value(tags[j].unigram, defaultSet())))
-          );
-          tagBadIdx = QSharedPointer<IndexSet>(
-              new IndexSet(newBadIdx->intersect(*badPositions.tagPositions.value(tags[j].unigram, defaultSet())))
-          );
+          tagGoodIdx = intersect_set(newGoodIdx,
+              goodPositions.tagPositions.value(tags[j].unigram, defaultSet()));
+
+          tagBadIdx = intersect_set(newBadIdx,
+            badPositions.tagPositions.value(tags[j].unigram, defaultSet()));
 
           if (ngram.size() == 1 && (tagGoodIdx->size() > 5 || tagBadIdx->size() > 5)) {
             Bigram bigram(ngram[0], tags[1]);
@@ -306,11 +326,11 @@ void expandCorpus(QTextStream *corpusStream, Positions const &goodPositions,
               iter != badIdx->end(); ++iter)
             newBadIdx->insert(*iter + 1);
 
-          wordGoodIdx = QSharedPointer<IndexSet>(
-              new IndexSet(newGoodIdx->intersect(*goodPositions.wordPositions.value(words[j].unigram, defaultSet()))));
+          wordGoodIdx = intersect_set(newGoodIdx,
+            goodPositions.wordPositions.value(words[j].unigram, defaultSet()));
 
-          wordBadIdx = QSharedPointer<IndexSet>(
-              new IndexSet(newBadIdx->intersect(*badPositions.wordPositions.value(words[j].unigram, defaultSet()))));
+          wordBadIdx = intersect_set(newBadIdx,
+            badPositions.wordPositions.value(words[j].unigram, defaultSet()));
 
           if (ngram.size() == 1 && (wordGoodIdx->size() > 5 || wordBadIdx->size() > 5)) {
             Bigram bigram(ngram[0], words[1]);
