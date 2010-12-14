@@ -13,6 +13,11 @@
 #include <QTextStream>
 #include <QVector>
 
+/*
+ * WARNING: this is just a proof of concept, containing a lot of duplicate
+ * code and assumptions. Rewrite for serious use :p.
+ */
+
 typedef QSet<int> IndexSet;
 typedef QHash<QString, QSharedPointer<IndexSet> > PositionHash;
 
@@ -47,8 +52,8 @@ inline uint qHash(Unigram const &unigram)
 }
 
 template <typename T>
-QSharedPointer<QSet<T> > intersect_set(QSharedPointer<QSet<T> > const a,
-    QSharedPointer<QSet<T> > const b) {
+QSharedPointer<QSet<T> > intersect_set(QSharedPointer<QSet<T> > a,
+    QSharedPointer<QSet<T> > b) {
   QSharedPointer<QSet<T> > small;
   QSharedPointer<QSet<T> > big;
 
@@ -70,14 +75,12 @@ QSharedPointer<QSet<T> > intersect_set(QSharedPointer<QSet<T> > const a,
   return inter;
 }
 
-
 typedef QPair<Unigram, Unigram> Bigram;
 
 typedef QHash<Bigram, QSharedPointer<IndexSet> > BigramCache;
 
-
 double expansionFactor(int badFreq) {
-  return 1.0 + exp(-0.5 * float(badFreq));
+  return 1.0 + exp(-0.5 * static_cast<double>(badFreq));
 }
 
 bool readCorpus(QTextStream &corpusStream, Positions *positions) {
@@ -124,10 +127,7 @@ double sequenceRatio(BigramCache *goodCache, BigramCache *badCache,
   QSharedPointer<IndexSet> goodIdx(new IndexSet);
   QSharedPointer<IndexSet> badIdx(new IndexSet);
 
- //   IndexSet goodIdx;
- //   IndexSet badIdx;
-
-  if (seq.size() == 2) {
+  if (seq.size() > 1) {
       BigramCache::iterator badIter;
       BigramCache::iterator goodIter;
       Bigram bigram(seq[0], seq[1]);
@@ -171,13 +171,13 @@ double sequenceRatio(BigramCache *goodCache, BigramCache *badCache,
             iter != badIdx->end(); ++iter)
         newBadIdx->insert(*iter + 1);
 
-      goodIdx = intersect_set(goodHash->value(seq[i].unigram,
-        defaultSet()), newGoodIdx);
+      goodIdx = intersect_set(newGoodIdx, goodHash->value(seq[i].unigram,
+        defaultSet()));
 
       badIdx = intersect_set(newBadIdx, badHash->value(seq[i].unigram,
         defaultSet()));
 
-      if (i == 1 && (goodIdx->size() > 5 || badIdx->size() > 5)) {
+      if (i == 1 && !fromCache && (goodIdx->size() > 5 || badIdx->size() > 5)) {
         Bigram bigram(seq[0], seq[1]);
         (*goodCache)[bigram] = goodIdx;
         (*badCache)[bigram] = badIdx;
@@ -240,19 +240,21 @@ void expandCorpus(QTextStream *corpusStream, Positions const &goodPositions,
         QSharedPointer<IndexSet> newTagGoodIdx(new IndexSet);
         QSharedPointer<IndexSet> newTagbadIdx(new IndexSet);
 
+        bool fromCache = false;
         if (ngram.size() == 1) {
             BigramCache::const_iterator goodIter;
-            if ((goodIter = goodBigramCache.find(Bigram(ngram[0], tags[j]))) !=
-                goodBigramCache.end())
-            tagGoodIdx = *goodIter;
-
             BigramCache::const_iterator badIter;
-            if ((badIter = badBigramCache.find(Bigram(ngram[0], tags[j]))) !=
-                badBigramCache.end())
-            tagBadIdx = *badIter;
+            if ((goodIter = goodBigramCache.find(Bigram(ngram[0], tags[j]))) !=
+                goodBigramCache.end() &&
+                (badIter = badBigramCache.find(Bigram(ngram[0], tags[j]))) !=
+                badBigramCache.end()) {
+              tagGoodIdx = *goodIter;
+              tagBadIdx = *badIter;
+              fromCache = true;
+            }
         }
 
-        if (tagGoodIdx->size() == 0 || tagBadIdx->size() == 0) {
+        if (!fromCache) {
           QSharedPointer<IndexSet> newGoodIdx(new IndexSet);
           for (IndexSet::const_iterator iter = goodIdx->begin();
               iter != goodIdx->end(); ++iter)
@@ -303,19 +305,21 @@ void expandCorpus(QTextStream *corpusStream, Positions const &goodPositions,
         QSharedPointer<IndexSet> wordGoodIdx(new IndexSet);
         QSharedPointer<IndexSet> wordBadIdx(new IndexSet);
 
+        fromCache = false;
         if (ngram.size() == 1) {
             BigramCache::const_iterator goodIter;
-            if ((goodIter = goodBigramCache.find(Bigram(ngram[0], words[j]))) !=
-                goodBigramCache.end())
-              wordGoodIdx = *goodIter;
-
             BigramCache::const_iterator badIter;
-            if ((badIter = badBigramCache.find(Bigram(ngram[0], words[j]))) !=
-                badBigramCache.end())
+            if ((goodIter = goodBigramCache.find(Bigram(ngram[0], words[j]))) !=
+                goodBigramCache.end() &&
+                (badIter = badBigramCache.find(Bigram(ngram[0], words[j]))) !=
+                badBigramCache.end()) {
               wordBadIdx = *badIter;
+              wordGoodIdx = *goodIter;
+              fromCache = true;
+            }
         }
 
-        if (wordGoodIdx->size() == 0 || wordBadIdx->size() == 0) {
+        if (!fromCache) {
           QSharedPointer<IndexSet> newGoodIdx(new IndexSet);
           for (IndexSet::const_iterator iter = goodIdx->begin();
               iter != goodIdx->end(); ++iter)
