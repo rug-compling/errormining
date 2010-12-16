@@ -193,7 +193,8 @@ double sequenceRatio(BigramCache *goodCache, BigramCache *badCache,
 }
 
 void expandCorpus(QTextStream *corpusStream, Positions const &goodPositions,
-    Positions const &badPositions, QTextStream *sentStream)
+    Positions const &badPositions, QTextStream *sentStream,
+    QTextStream *formStream)
 {
   BigramCache goodBigramCache;
   BigramCache badBigramCache;
@@ -373,26 +374,24 @@ void expandCorpus(QTextStream *corpusStream, Positions const &goodPositions,
       QString ngramStr(ngramFlat.join("_"));
 
       *sentStream << ngramStr << " ";
-      QTextStream out(stdout);
-      out << ngramStr << " ";
+      *formStream << ngramStr << " " << susp << " " << goodIdx->size() <<
+        " " << badIdx->size() << "\n";
     }
 
-    count +=1;
-    if (count % 2 == 0) {
-      QTextStream out(stdout);
+    count += 1;
+    if (count % 100 == 0) {
+      QTextStream out(stderr);
       out << ".";
      }
 
      *sentStream << "\n";
-     QTextStream out(stdout);
-     out << "\n";
   }
 }
 
 int main(int argc, char *argv[]) {
   QCoreApplication app(argc, argv);
 
-  if (argc != 4)
+  if (argc != 5)
     return 1;
 
   QFile goodCorpus(argv[1]);
@@ -407,6 +406,10 @@ int main(int argc, char *argv[]) {
   sents.open(QFile::WriteOnly);
   QTextStream sentStream(&sents);
 
+  QFile forms(argv[4]);
+  forms.open(QFile::WriteOnly);
+  QTextStream formStream(&forms);
+
   QTextStream err(stderr);
   err << "Constructing indextables..." << endl;
   Positions goodPositions;
@@ -417,5 +420,6 @@ int main(int argc, char *argv[]) {
   
   err << "Expanding..." << endl;
   badStream.seek(0);
-  expandCorpus(&badStream, goodPositions, badPositions, &sentStream);
+  expandCorpus(&badStream, goodPositions, badPositions, &sentStream,
+    &formStream);
 }
