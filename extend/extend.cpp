@@ -92,6 +92,8 @@ bool readCorpus(QTextStream &corpusStream, Positions *positions) {
     if (line.isNull())
       break;
 
+    line = line.trimmed();
+
     QStringList lineParts = line.split(" ", QString::SkipEmptyParts);
 
     for (QStringList::const_iterator iter = lineParts.begin();
@@ -102,16 +104,15 @@ bool readCorpus(QTextStream &corpusStream, Positions *positions) {
       QString word(wordTag.left(sepIndex));
       QString tag(wordTag.mid(sepIndex + 1));
 
-      if (positions->wordPositions[word].isNull())
-        positions->wordPositions[word] = QSharedPointer<IndexSet>(new IndexSet);
+      if (!positions->wordPositions.contains(word))
+        positions->wordPositions[word] = defaultSet(); 
       positions->wordPositions[word]->insert(position);
-      if (positions->tagPositions[tag].isNull())
-        positions->tagPositions[tag] = QSharedPointer<IndexSet>(new IndexSet);
+      if (!positions->tagPositions.contains(tag))
+        positions->tagPositions[tag] = defaultSet(); 
       positions->tagPositions[tag]->insert(position);
 
       ++position;
     }
-
   }
 
   return true;
@@ -137,8 +138,7 @@ double sequenceRatio(BigramCache *goodCache, BigramCache *badCache,
            goodCache->end()) {
         badIdx = *badIter;
         goodIdx = *goodIter;
-        seq.pop_front();
-        seq.pop_front();
+        seq = seq.mid(2);
         fromCache = true;
       }
   }
@@ -160,7 +160,6 @@ double sequenceRatio(BigramCache *goodCache, BigramCache *badCache,
       goodIdx = goodHash->value(seq[i].unigram, defaultSet());
       badIdx = badHash->value(seq[i].unigram, defaultSet());
     } else {
-
       QSharedPointer<IndexSet> newGoodIdx(new IndexSet);
       for (IndexSet::const_iterator iter = goodIdx->begin();
             iter != goodIdx->end(); ++iter)
@@ -185,11 +184,11 @@ double sequenceRatio(BigramCache *goodCache, BigramCache *badCache,
     }
   }
 
-  if (goodIdx->size() + badIdx->size() == 0)
+  if (badIdx->size() == 0)
     return 0.0;
 
   return static_cast<double>(badIdx->size())
-    / (goodIdx->size() + badIdx->size());
+    / static_cast<double>(goodIdx->size() + badIdx->size());
 }
 
 void expandCorpus(QTextStream *corpusStream, Positions const &goodPositions,
@@ -230,28 +229,35 @@ void expandCorpus(QTextStream *corpusStream, Positions const &goodPositions,
       QSharedPointer<IndexSet> badIdx =
         badPositions.wordPositions.value(words[i].unigram, defaultSet());
       double susp = static_cast<double>(badIdx->size()) /
-        (badIdx->size() + goodIdx->size());
+        static_cast<double>(badIdx->size() + goodIdx->size());
 
       QVector<Unigram> ngram;
       ngram.push_back(words[i]);
 
-      for (int j = i + 1; j < words.size(); ++j) {
-        QSharedPointer<IndexSet> tagGoodIdx(new IndexSet);
-        QSharedPointer<IndexSet> tagBadIdx(new IndexSet);
-        QSharedPointer<IndexSet> newTagGoodIdx(new IndexSet);
-        QSharedPointer<IndexSet> newTagbadIdx(new IndexSet);
+      for (int j = i + 1; j < lineParts.size(); ++j) {
+        QSharedPointer<IndexSet> tagGoodIdx;
+        QSharedPointer<IndexSet> tagBadIdx;
 
         bool fromCache = false;
         if (ngram.size() == 1) {
             BigramCache::const_iterator goodIter;
             BigramCache::const_iterator badIter;
-            if ((goodIter = goodBigramCache.find(Bigram(ngram[0], tags[j]))) !=
-                goodBigramCache.end() &&
-                (badIter = badBigramCache.find(Bigram(ngram[0], tags[j]))) !=
-                badBigramCache.end()) {
+            Bigram bigram(ngram[0], tags[j]);
+            if ((goodIter = goodBigramCache.find(bigram)) !=
+                  goodBigramCache.end() &&
+                (badIter = badBigramCache.find(bigram)) !=
+                  badBigramCache.end()) {
               tagGoodIdx = *goodIter;
               tagBadIdx = *badIter;
               fromCache = true;
+
+              if (ngram.size() == 1 && ngram[0].unigram == "de" &&
+                  tags[j].unigram == "N")
+              {
+                QTextStream err(stderr);
+                err << "cached --> ok: " << tagGoodIdx->size() << " bad: " <<
+                  tagBadIdx->size() << "\n";
+              }
             }
         }
 
@@ -272,17 +278,27 @@ void expandCorpus(QTextStream *corpusStream, Positions const &goodPositions,
           tagBadIdx = intersect_set(newBadIdx,
             badPositions.tagPositions.value(tags[j].unigram, defaultSet()));
 
-          if (ngram.size() == 1 && (tagGoodIdx->size() > 5 || tagBadIdx->size() > 5)) {
-            Bigram bigram(ngram[0], tags[1]);
+          if (j - i == 1 && (tagGoodIdx->size() > 5 || tagBadIdx->size() > 5)) {
+            Bigram bigram(ngram[0], tags[j]);
             goodBigramCache[bigram] = tagGoodIdx;
             badBigramCache[bigram] = tagBadIdx;
+          }
+
+          if (j == i + 1 && tags[j].unigram == "N") {
+            QTextStream err(stderr);
+            //err << "'N' --> ok: " <<
+              //goodPositions.tagPositions.value(tags[j].unigram, defaultSet())->size()  <<
+              //" bad: " << badPositions.tagPositions.value(tags[j].unigram, defaultSet())->size()  << "\n";
+            if (ngram[0].unigram == "de")
+              err << "intersect --> ok: " << tagGoodIdx->size() <<
+                " bad: " << tagBadIdx->size() << "\n";
           }
         }
 
         double newTagSusp = 0.0;
         if (tagBadIdx->size() > 0)
           newTagSusp = static_cast<double>(tagBadIdx->size()) /
-            (tagBadIdx->size() + tagGoodIdx->size());
+            static_cast<double>(tagBadIdx->size() + tagGoodIdx->size());
 
         double ef = expansionFactor(tagBadIdx->size());
 
@@ -302,17 +318,18 @@ void expandCorpus(QTextStream *corpusStream, Positions const &goodPositions,
         ////////////////////
         // Word expansion //
         ////////////////////
-        
-        QSharedPointer<IndexSet> wordGoodIdx(new IndexSet);
-        QSharedPointer<IndexSet> wordBadIdx(new IndexSet);
+
+        QSharedPointer<IndexSet> wordGoodIdx;
+        QSharedPointer<IndexSet> wordBadIdx;
 
         fromCache = false;
         if (ngram.size() == 1) {
             BigramCache::const_iterator goodIter;
             BigramCache::const_iterator badIter;
-            if ((goodIter = goodBigramCache.find(Bigram(ngram[0], words[j]))) !=
-                goodBigramCache.end() &&
-                (badIter = badBigramCache.find(Bigram(ngram[0], words[j]))) !=
+            Bigram bigram(ngram[0], words[j]);
+            if ((goodIter = goodBigramCache.find(bigram)) !=
+                  goodBigramCache.end() &&
+                (badIter = badBigramCache.find(bigram)) !=
                 badBigramCache.end()) {
               wordBadIdx = *badIter;
               wordGoodIdx = *goodIter;
@@ -337,8 +354,8 @@ void expandCorpus(QTextStream *corpusStream, Positions const &goodPositions,
           wordBadIdx = intersect_set(newBadIdx,
             badPositions.wordPositions.value(words[j].unigram, defaultSet()));
 
-          if (ngram.size() == 1 && (wordGoodIdx->size() > 5 || wordBadIdx->size() > 5)) {
-            Bigram bigram(ngram[0], words[1]);
+          if (j - i == 1 && (wordGoodIdx->size() > 5 || wordBadIdx->size() > 5)) {
+            Bigram bigram(ngram[0], words[j]);
             goodBigramCache[bigram] = wordGoodIdx;
             badBigramCache[bigram] = wordBadIdx;
           }
@@ -372,6 +389,11 @@ void expandCorpus(QTextStream *corpusStream, Positions const &goodPositions,
           iter != ngram.end(); ++iter)
         ngramFlat.push_back(iter->unigram);
       QString ngramStr(ngramFlat.join("_"));
+
+      //if (ngramFlat.size() == 2 && ngramFlat[0] == "de" && ngramFlat[1] == "N") {
+      //  QTextStream err(stderr);
+      //  err << "ok: " << goodIdx->size() << " bad: " << badIdx->size() << "\n";
+      //}
 
       *sentStream << ngramStr << " ";
       *formStream << ngramStr << " " << susp << " " << goodIdx->size() <<
@@ -409,6 +431,8 @@ int main(int argc, char *argv[]) {
   QFile forms(argv[4]);
   forms.open(QFile::WriteOnly);
   QTextStream formStream(&forms);
+  formStream.setRealNumberPrecision(6);
+  formStream.setRealNumberNotation(QTextStream::FixedNotation);
 
   QTextStream err(stderr);
   err << "Constructing indextables..." << endl;
@@ -417,7 +441,7 @@ int main(int argc, char *argv[]) {
 
   Positions badPositions;
   readCorpus(badStream, &badPositions);
-  
+
   err << "Expanding..." << endl;
   badStream.seek(0);
   expandCorpus(&badStream, goodPositions, badPositions, &sentStream,
