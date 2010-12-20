@@ -250,14 +250,6 @@ void expandCorpus(QTextStream *corpusStream, Positions const &goodPositions,
               tagGoodIdx = *goodIter;
               tagBadIdx = *badIter;
               fromCache = true;
-
-              if (ngram.size() == 1 && ngram[0].unigram == "de" &&
-                  tags[j].unigram == "N")
-              {
-                QTextStream err(stderr);
-                err << "cached --> ok: " << tagGoodIdx->size() << " bad: " <<
-                  tagBadIdx->size() << "\n";
-              }
             }
         }
 
@@ -282,16 +274,6 @@ void expandCorpus(QTextStream *corpusStream, Positions const &goodPositions,
             Bigram bigram(ngram[0], tags[j]);
             goodBigramCache[bigram] = tagGoodIdx;
             badBigramCache[bigram] = tagBadIdx;
-          }
-
-          if (j == i + 1 && tags[j].unigram == "N") {
-            QTextStream err(stderr);
-            //err << "'N' --> ok: " <<
-              //goodPositions.tagPositions.value(tags[j].unigram, defaultSet())->size()  <<
-              //" bad: " << badPositions.tagPositions.value(tags[j].unigram, defaultSet())->size()  << "\n";
-            if (ngram[0].unigram == "de")
-              err << "intersect --> ok: " << tagGoodIdx->size() <<
-                " bad: " << tagBadIdx->size() << "\n";
           }
         }
 
@@ -389,11 +371,6 @@ void expandCorpus(QTextStream *corpusStream, Positions const &goodPositions,
           iter != ngram.end(); ++iter)
         ngramFlat.push_back(iter->unigram);
       QString ngramStr(ngramFlat.join("_"));
-
-      //if (ngramFlat.size() == 2 && ngramFlat[0] == "de" && ngramFlat[1] == "N") {
-      //  QTextStream err(stderr);
-      //  err << "ok: " << goodIdx->size() << " bad: " << badIdx->size() << "\n";
-      //}
 
       *sentStream << ngramStr << " ";
       *formStream << ngramStr << " " << susp << " " << goodIdx->size() <<
