@@ -535,8 +535,10 @@ void MinerMainWindow::updateSentenceList()
 		QString form = d_minerMainWindow.formsTreeWidget->currentItem()->text(1);
 
 		QSqlQuery sentenceQuery;
-		sentenceQuery.prepare("SELECT sentences.sentence FROM sentences, forms, formSentence"
-			" WHERE forms.form = :form AND formSentence.formId = forms.rowid AND"
+		sentenceQuery.prepare("SELECT sentences.sentence FROM sentences, formSentence"
+			" WHERE formSentence.formId = ("
+      "  SELECT forms.rowid FROM forms WHERE forms.form = :form LIMIT 1"
+      ") AND"
 			" sentences.rowid = formSentence.sentenceId AND"
 			" sentences.unparsable = 'true'");
 		sentenceQuery.bindValue(":form", form);
