@@ -183,11 +183,24 @@ void MinerMainWindow::removeSelectedForms()
 	// Get the absolute index of the first item in the selection.
 	int newIndex = treeRootItem->indexOfChild(selectedItems[0]);
 
+    // Perform deep or shallow removal?
+    QSettings settings("RUG", "Mining Viewer");
+    bool deepRemoval = settings.value(DEEP_FORM_REMOVAL,
+        DEEP_FORM_REMOVAL_DEFAULT).toBool();
+
 	// Remove the forms represented by the selected items.
 	for (QList<QTreeWidgetItem *>::iterator iter = selectedItems.begin();
 			iter != selectedItems.end(); ++iter)
-		if (!removeForm((*iter)->text(1)))
-			return;
+    {
+        bool success;
+        QString form = (*iter)->text(1);
+        success = deepRemoval ? removeForm(form) : removeFormShallow(form);
+
+        if (!success)
+            return;
+    }
+
+    updateStatistics();
 
 	// Scan up until we find a form that is still valid (exists in the
 	// database).
@@ -261,9 +274,18 @@ bool MinerMainWindow::removeForm(QString const &form)
 
 	removeStaleForms(affectedFormIds);
 	
-	updateStatistics();
-
 	return true;
+}
+
+bool MinerMainWindow::removeFormShallow(const QString &form)
+{
+    QSqlQuery removeFormQuery;
+    removeFormQuery.prepare("DELETE FROM forms"
+        " WHERE forms.form = :form");
+    removeFormQuery.bindValue(":form", form);
+    removeFormQuery.exec();
+
+    return true;
 }
 
 void MinerMainWindow::removeStaleForms(std::set<int> const &affectedFormIds)
@@ -285,8 +307,6 @@ void MinerMainWindow::removeStaleForms(std::set<int> const &affectedFormIds)
 
 	QSqlDatabase::database().commit();
 }
-
-//#include <iostream>
 
 void MinerMainWindow::saveForms()
 {

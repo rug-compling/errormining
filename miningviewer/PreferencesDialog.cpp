@@ -37,6 +37,7 @@ void PreferencesDialog::accept()
 	QString unparsableFreqThreshold =
 		d_preferencesDialog.unparsableFreqThresholdLineEdit->text();
 	QString freqThreshold =	d_preferencesDialog.freqThresholdLineEdit->text();
+    bool deepFormRemoval = d_preferencesDialog.deepFormRemovalCheckBox->checkState();
 
 	// Store settings.
 	QSettings settings(VENDOR, APPLICATION);
@@ -45,6 +46,7 @@ void PreferencesDialog::accept()
 	settings.setValue(THRESHOLD_METHOD_SETTING, thresholdMethod);
 	settings.setValue(UNPARSABLE_FREQ_THRESHOLD_SETTING, unparsableFreqThreshold);
 	settings.setValue(FREQ_THRESHOLD_SETTING, freqThreshold);
+    settings.setValue(DEEP_FORM_REMOVAL, deepFormRemoval);
 
 	QDialog::accept();
 }
@@ -74,11 +76,14 @@ void PreferencesDialog::readSettings()
 			UNPARSABLE_FREQ_THRESHOLD_DEFAULT).toString();
 	QString freqThreshold =	settings.value(FREQ_THRESHOLD_SETTING,
 		FREQ_THRESHOLD_DEFAULT).toString();
+    bool deepFormRemoval = settings.value(DEEP_FORM_REMOVAL,
+        DEEP_FORM_REMOVAL_DEFAULT).toBool();
 
 	d_preferencesDialog.suspThresholdLineEdit->setText(suspThreshold);
 	d_preferencesDialog.avgMultiplierLineEdit->setText(avgMultiplier);
 	d_preferencesDialog.unparsableFreqThresholdLineEdit->setText(unparsableFreqThreshold);
 	d_preferencesDialog.freqThresholdLineEdit->setText(freqThreshold);
+    d_preferencesDialog.deepFormRemovalCheckBox->setChecked(deepFormRemoval);
 
 	if (suspThresholdMethod == SUSP_THRESHOLD_METHOD)
 		d_preferencesDialog.suspThresholdRadioButton->setChecked(true);

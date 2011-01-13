@@ -47,6 +47,7 @@ private:
 	bool isValidForm(QString const &form) const;
 	void readSettings();
 	bool removeForm(QString const &form);
+    bool removeFormShallow(const QString &form);
 	void showForms();
 	errormining::ScoringMethod scoringMethod();
 	void updateSentenceList();
