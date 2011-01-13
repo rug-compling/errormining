@@ -65,6 +65,8 @@ bool MinerMainWindow::isValidForm(QString const &form) const
 
 void MinerMainWindow::formSelected(QTreeWidgetItem *item, QTreeWidgetItem *)
 {
+    d_minerMainWindow.sentenceTextEdit->clear();
+
 	if (d_minerMainWindow.allSentenceMatchCheckBox->isChecked())
 	{
 		d_minerMainWindow.sentenceRegExpLineEdit->clear();
