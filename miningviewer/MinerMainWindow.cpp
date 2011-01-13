@@ -22,6 +22,9 @@ MinerMainWindow::MinerMainWindow(QWidget *parent) : QMainWindow(parent)
 	connect(d_minerMainWindow.formsTreeWidget,
 		SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)),
 		this, SLOT(formSelected(QTreeWidgetItem *, QTreeWidgetItem *)));
+    connect(d_minerMainWindow.formsTreeWidget,
+        SIGNAL(itemDoubleClicked(QTreeWidgetItem*, int)),
+        this, SLOT(sentencesRequested(QTreeWidgetItem *, int)));
 	connect(d_minerMainWindow.removeFormPushButton, SIGNAL(clicked()),
 		this, SLOT(removeSelectedForms()));
 	connect(d_minerMainWindow.saveAction, SIGNAL(activated()),
@@ -96,7 +99,46 @@ void MinerMainWindow::formSelected(QTreeWidgetItem *item, QTreeWidgetItem *)
 			formInfoQuery.value(3).toString());
 	}
 
-	updateSentenceList();
+    //updateSentenceList();
+}
+
+void MinerMainWindow::sentencesRequested(QTreeWidgetItem *item, int)
+{
+    if (d_minerMainWindow.allSentenceMatchCheckBox->isChecked())
+    {
+        d_minerMainWindow.sentenceRegExpLineEdit->clear();
+        d_sentenceFilterRegExp.clear();
+    }
+
+    if (item == 0) {
+        d_minerMainWindow.suspicionLabel->clear();
+        d_minerMainWindow.freqLabel->clear();
+        d_minerMainWindow.suspFreqLabel->clear();
+        d_minerMainWindow.uniqSentsFreqLabel->clear();
+
+        updateSentenceList();
+
+        return;
+    }
+
+    QString form = item->text(1);
+
+    {
+        QSqlQuery formInfoQuery;
+        formInfoQuery.prepare("SELECT suspicion, freq, suspFreq, uniqSentsFreq"
+            " FROM forms WHERE form = :form");
+        formInfoQuery.bindValue(":form", form);
+        formInfoQuery.exec();
+        formInfoQuery.next();
+
+        d_minerMainWindow.suspicionLabel->setText(formInfoQuery.value(0).toString());
+        d_minerMainWindow.freqLabel->setText(formInfoQuery.value(1).toString());
+        d_minerMainWindow.suspFreqLabel->setText(formInfoQuery.value(2).toString());
+        d_minerMainWindow.uniqSentsFreqLabel->setText(
+            formInfoQuery.value(3).toString());
+    }
+
+    updateSentenceList();
 }
 
 void MinerMainWindow::readSettings()

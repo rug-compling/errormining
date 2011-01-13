@@ -38,6 +38,7 @@ private slots:
 	void removeStaleForms(std::set<int> const &affectedFormIds);
 	void saveForms();
 	void sentenceRegExpChanged();
+    void sentencesRequested(QTreeWidgetItem *item, int);
 	void showPreferences();
 
 private:
