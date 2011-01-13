@@ -69,8 +69,8 @@ size_t addResults(char const *resultsFilename)
 		QString line = resultsStream.readLine().trimmed();
 		QStringList lineParts = line.split(" ");
 
-		if (lineParts.size() < 4)
-			throw runtime_error("Malformed line in result file.");
+		if (lineParts.size() < 4) 
+			cerr << "Malformed line in result file: " << line.toUtf8().constData() << endl;
 
 		// Extract and bind information.
 		query.bindValue(":suspFreq", lineParts.takeLast());
