@@ -134,7 +134,13 @@ QSet<size_t> formSentences(QString const &form, bool unparsable)
 
 void usage(string const &programName)
 {
-	cout << "Usage: " << programName << " database scoring_method" << endl;
+	cout << "Usage: " << programName << " database scoring_method" << endl << endl <<
+    "where scoring_method is one of:" << endl << endl <<
+    "scoring_susp\t\t\tsuspicion" << endl <<
+    "scoring_susp_obs\t\tsuspicion * number of observations" << endl <<
+    "scoring_susp_uniqsents\t\tsuspicion * unique sentences" << endl <<
+    "scoring_susp_ln_obs\t\tsuspicion * ln(number of observations)" << endl <<
+    "scoring_susp_ln_uniqsents\tsuspicion * ln(unique sentences)" << endl;
 }
 
 int main(int argc, char *argv[])
