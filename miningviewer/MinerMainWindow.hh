@@ -8,6 +8,8 @@
 #include <QModelIndex>
 #include <QRegExp>
 #include <QSharedPointer>
+#include <QSortFilterProxyModel>
+#include <QSqlQueryModel>
 #include <QString>
 #include <QTreeWidgetItem>
 #include <QWidget>
@@ -38,7 +40,6 @@ private slots:
 	void removeStaleForms(std::set<int> const &affectedFormIds);
 	void saveForms();
 	void sentenceRegExpChanged();
-    void sentencesRequested(QTreeWidgetItem *item, int);
 	void showPreferences();
 
 private:
@@ -59,6 +60,8 @@ private:
 	PreferencesDialog d_preferencesDialog;
 	QSharedPointer<QRegExp> d_filterRegExp;
 	QSharedPointer<QRegExp> d_sentenceFilterRegExp;
+    QSqlQueryModel d_sentenceModel;
+    QSortFilterProxyModel d_proxySentenceModel;
 };
 
 }

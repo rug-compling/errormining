@@ -22,10 +22,7 @@ MinerMainWindow::MinerMainWindow(QWidget *parent) : QMainWindow(parent)
 	connect(d_minerMainWindow.formsTreeWidget,
 		SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)),
 		this, SLOT(formSelected(QTreeWidgetItem *, QTreeWidgetItem *)));
-    connect(d_minerMainWindow.formsTreeWidget,
-        SIGNAL(itemDoubleClicked(QTreeWidgetItem*, int)),
-        this, SLOT(sentencesRequested(QTreeWidgetItem *, int)));
-	connect(d_minerMainWindow.removeFormPushButton, SIGNAL(clicked()),
+    connect(d_minerMainWindow.removeFormPushButton, SIGNAL(clicked()),
 		this, SLOT(removeSelectedForms()));
 	connect(d_minerMainWindow.saveAction, SIGNAL(activated()),
 		this, SLOT(saveForms()));
@@ -36,6 +33,9 @@ MinerMainWindow::MinerMainWindow(QWidget *parent) : QMainWindow(parent)
 		this, SLOT(regExpChanged()));
 	connect(d_minerMainWindow.sentenceRegExpLineEdit, SIGNAL(returnPressed()),
 		this, SLOT(sentenceRegExpChanged()));
+
+    d_proxySentenceModel.setSourceModel(&d_sentenceModel);
+    d_minerMainWindow.sentenceView->setModel(&d_proxySentenceModel);
 }
 
 void MinerMainWindow::close()
@@ -46,7 +46,7 @@ void MinerMainWindow::close()
 
 void MinerMainWindow::copySentence()
 {
-	d_minerMainWindow.sentenceTextEdit->copy();
+    //d_minerMainWindow.sentenceTextEdit->copy();
 }
 
 bool MinerMainWindow::isValidForm(QString const &form) const
@@ -65,8 +65,6 @@ bool MinerMainWindow::isValidForm(QString const &form) const
 
 void MinerMainWindow::formSelected(QTreeWidgetItem *item, QTreeWidgetItem *)
 {
-    d_minerMainWindow.sentenceTextEdit->clear();
-
 	if (d_minerMainWindow.allSentenceMatchCheckBox->isChecked())
 	{
 		d_minerMainWindow.sentenceRegExpLineEdit->clear();
@@ -81,7 +79,7 @@ void MinerMainWindow::formSelected(QTreeWidgetItem *item, QTreeWidgetItem *)
 		
 		updateSentenceList();
 
-		return; 
+        return;
 	}
 
 	QString form = item->text(1);
@@ -100,45 +98,6 @@ void MinerMainWindow::formSelected(QTreeWidgetItem *item, QTreeWidgetItem *)
 		d_minerMainWindow.uniqSentsFreqLabel->setText(
 			formInfoQuery.value(3).toString());
 	}
-
-    //updateSentenceList();
-}
-
-void MinerMainWindow::sentencesRequested(QTreeWidgetItem *item, int)
-{
-    if (d_minerMainWindow.allSentenceMatchCheckBox->isChecked())
-    {
-        d_minerMainWindow.sentenceRegExpLineEdit->clear();
-        d_sentenceFilterRegExp.clear();
-    }
-
-    if (item == 0) {
-        d_minerMainWindow.suspicionLabel->clear();
-        d_minerMainWindow.freqLabel->clear();
-        d_minerMainWindow.suspFreqLabel->clear();
-        d_minerMainWindow.uniqSentsFreqLabel->clear();
-
-        updateSentenceList();
-
-        return;
-    }
-
-    QString form = item->text(1);
-
-    {
-        QSqlQuery formInfoQuery;
-        formInfoQuery.prepare("SELECT suspicion, freq, suspFreq, uniqSentsFreq"
-            " FROM forms WHERE form = :form");
-        formInfoQuery.bindValue(":form", form);
-        formInfoQuery.exec();
-        formInfoQuery.next();
-
-        d_minerMainWindow.suspicionLabel->setText(formInfoQuery.value(0).toString());
-        d_minerMainWindow.freqLabel->setText(formInfoQuery.value(1).toString());
-        d_minerMainWindow.suspFreqLabel->setText(formInfoQuery.value(2).toString());
-        d_minerMainWindow.uniqSentsFreqLabel->setText(
-            formInfoQuery.value(3).toString());
-    }
 
     updateSentenceList();
 }
@@ -439,8 +398,11 @@ void MinerMainWindow::sentenceRegExpChanged()
 
 	// When the regexp string length is 0, change the pointer to the
 	// regexp to a null pointer to signal that no regexp should be used.
-	if (regexStr.size() == 0)
+    if (regexStr.size() == 0) {
 		d_sentenceFilterRegExp.clear();
+        d_proxySentenceModel.setFilterRegExp(QRegExp());
+        d_sentenceModel.setQuery(d_sentenceModel.query());
+    }
 	else {
 		QRegExp *sentenceFilterRegExp = new QRegExp(QString("(") + regexStr + ")");
 
@@ -455,7 +417,9 @@ void MinerMainWindow::sentenceRegExpChanged()
 		}
 
 		d_sentenceFilterRegExp = QSharedPointer<QRegExp>(sentenceFilterRegExp);
-	}
+        d_proxySentenceModel.setFilterRegExp(*sentenceFilterRegExp);
+        d_sentenceModel.setQuery(d_sentenceModel.query());
+    }
 
 	// There could still be a message in the status bar about a
 	// previously incorrect regexp. Clear the message for clarity.
@@ -564,33 +528,18 @@ ScoringMethod MinerMainWindow::scoringMethod()
 }
 
 void MinerMainWindow::updateSentenceList()
-{	
-	d_minerMainWindow.sentenceTextEdit->clear();
+{
+    // Todo: Underline regex, escape HTML
 
+    QSqlQuery sentenceQuery;
+
+    d_minerMainWindow.sentenceView->scrollToTop();
 	if (d_minerMainWindow.allSentenceMatchCheckBox->isChecked() &&
 		d_sentenceFilterRegExp.data() != 0)
 	{
-		QSqlQuery sentenceQuery;
 		sentenceQuery.prepare("SELECT sentences.sentence FROM sentences"
 			" WHERE sentences.unparsable = 'true'");
 		sentenceQuery.exec();
-
-		while (sentenceQuery.next())
-		{
-			QString sentence = sentenceQuery.value(0).toString();
-			
-			if (d_sentenceFilterRegExp.data() != 0)
-				if (d_sentenceFilterRegExp->indexIn(sentence) == -1)
-					continue;
-
-			// A sentence may contain leftover HTML.
-			sentence = Qt::escape(sentence);
-
-			// Underline the characters matched by the regex.
-			sentence = sentence.replace(*d_sentenceFilterRegExp, "<u>\\1</u>");
-
-			d_minerMainWindow.sentenceTextEdit->append(sentence);
-		}
 	}
 	else {
 		if (d_minerMainWindow.formsTreeWidget->currentItem() == 0)
@@ -598,37 +547,17 @@ void MinerMainWindow::updateSentenceList()
 
 		QString form = d_minerMainWindow.formsTreeWidget->currentItem()->text(1);
 
-		QSqlQuery sentenceQuery;
 		sentenceQuery.prepare("SELECT sentences.sentence FROM sentences, formSentence"
-			" WHERE formSentence.formId = ("
-      "  SELECT forms.rowid FROM forms WHERE forms.form = :form LIMIT 1"
-      ") AND"
+            " WHERE formSentence.formId = ("
+            "  SELECT forms.rowid FROM forms WHERE forms.form = :form LIMIT 1"
+            ") AND"
 			" sentences.rowid = formSentence.sentenceId AND"
 			" sentences.unparsable = 'true'");
 		sentenceQuery.bindValue(":form", form);
-		sentenceQuery.exec();
-
-		form = Qt::escape(form);
-
-		while (sentenceQuery.next())
-		{
-			QString sentence = sentenceQuery.value(0).toString();
-			
-			if (d_sentenceFilterRegExp.data() != 0)
-				if (d_sentenceFilterRegExp->indexIn(sentence) == -1)
-					continue;
-
-			// A sentence may contain leftover HTML.
-			sentence = Qt::escape(sentence);
-
-			// Underline the form.
-			sentence.replace(form, QString("<u>") + form + "</u>");
-
-			d_minerMainWindow.sentenceTextEdit->append(sentence);
-		}
+        sentenceQuery.exec();
 	}
 
-	d_minerMainWindow.sentenceTextEdit->moveCursor(QTextCursor::Start);
+    d_sentenceModel.setQuery(sentenceQuery);
 }
 
 void MinerMainWindow::updateStatistics()

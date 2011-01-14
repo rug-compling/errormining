@@ -242,14 +242,7 @@
             </layout>
            </item>
            <item>
-            <widget class="QTextEdit" name="sentenceTextEdit">
-             <property name="lineWrapMode">
-              <enum>QTextEdit::NoWrap</enum>
-             </property>
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
+            <widget class="QListView" name="sentenceView"/>
            </item>
           </layout>
          </widget>
