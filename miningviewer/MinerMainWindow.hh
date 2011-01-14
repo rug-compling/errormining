@@ -59,7 +59,6 @@ private:
 	Ui::MinerMainWindow d_minerMainWindow;
 	PreferencesDialog d_preferencesDialog;
 	QSharedPointer<QRegExp> d_filterRegExp;
-	QSharedPointer<QRegExp> d_sentenceFilterRegExp;
     QSqlQueryModel d_sentenceModel;
     QSortFilterProxyModel d_proxySentenceModel;
 };

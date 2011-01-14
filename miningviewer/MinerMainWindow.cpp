@@ -68,8 +68,8 @@ void MinerMainWindow::formSelected(QTreeWidgetItem *item, QTreeWidgetItem *)
 	if (d_minerMainWindow.allSentenceMatchCheckBox->isChecked())
 	{
 		d_minerMainWindow.sentenceRegExpLineEdit->clear();
-		d_sentenceFilterRegExp.clear();
-	}
+        d_proxySentenceModel.setFilterRegExp(QRegExp());
+    }
 
 	if (item == 0) {
 		d_minerMainWindow.suspicionLabel->clear();
@@ -398,27 +398,21 @@ void MinerMainWindow::sentenceRegExpChanged()
 
 	// When the regexp string length is 0, change the pointer to the
 	// regexp to a null pointer to signal that no regexp should be used.
-    if (regexStr.size() == 0) {
-		d_sentenceFilterRegExp.clear();
+    if (regexStr.size() == 0)
         d_proxySentenceModel.setFilterRegExp(QRegExp());
-        d_sentenceModel.setQuery(d_sentenceModel.query());
-    }
 	else {
-		QRegExp *sentenceFilterRegExp = new QRegExp(QString("(") + regexStr + ")");
+        QRegExp sentenceFilterRegExp(QString("(") + regexStr + ")");
 
 		// Check if the regexp is valid. If not, we leave the existing
 		// regexp as-is.
-		if (!sentenceFilterRegExp->isValid()) {
+        if (!sentenceFilterRegExp.isValid()) {
 			d_minerMainWindow.statusbar->showMessage(
 				QString("Compilation of regular expression failed: ") +
-				sentenceFilterRegExp->errorString(), 5000);
-			delete sentenceFilterRegExp;
+                sentenceFilterRegExp.errorString(), 5000);
 			return;
 		}
 
-		d_sentenceFilterRegExp = QSharedPointer<QRegExp>(sentenceFilterRegExp);
-        d_proxySentenceModel.setFilterRegExp(*sentenceFilterRegExp);
-        d_sentenceModel.setQuery(d_sentenceModel.query());
+        d_proxySentenceModel.setFilterRegExp(sentenceFilterRegExp);
     }
 
 	// There could still be a message in the status bar about a
@@ -535,7 +529,7 @@ void MinerMainWindow::updateSentenceList()
 
     d_minerMainWindow.sentenceView->scrollToTop();
 	if (d_minerMainWindow.allSentenceMatchCheckBox->isChecked() &&
-		d_sentenceFilterRegExp.data() != 0)
+        d_proxySentenceModel.filterRegExp().pattern().size() != 0)
 	{
 		sentenceQuery.prepare("SELECT sentences.sentence FROM sentences"
 			" WHERE sentences.unparsable = 'true'");
