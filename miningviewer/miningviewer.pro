@@ -8,13 +8,15 @@ QT += sql
 HEADERS += FormTreeWidgetItem.hh \
     MinerMainWindow.hh \
     PreferencesDialog.hh \
-    global.hh
+    global.hh \
+    RichTextDelegate.hh
 FORMS += MinerMainWindow.ui \
     PreferencesDialog.ui
 SOURCES += FormTreeWidgetItem.cpp \
     MinerMainWindow.cpp \
     PreferencesDialog.cpp \
-    miningviewer.cpp
+    miningviewer.cpp \
+    RichTextDelegate.cpp
 
 # Internal headers
 HEADERS +=

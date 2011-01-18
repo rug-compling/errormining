@@ -18,6 +18,8 @@
 #include "PreferencesDialog.hh"
 #include "ui_MinerMainWindow.h"
 
+class RichTextDelegate;
+
 namespace miningviewer {
 
 class MinerMainWindow : public QMainWindow
@@ -59,6 +61,7 @@ private:
 	PreferencesDialog d_preferencesDialog;
 	QSharedPointer<QRegExp> d_filterRegExp;
     QSqlQueryModel d_sentenceModel;
+    RichTextDelegate *d_richTextDelegate;
 };
 
 }

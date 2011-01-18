@@ -26,12 +26,14 @@
 #include "FormTreeWidgetItem.hh"
 #include "MinerMainWindow.hh"
 #include "PreferencesDialog.hh"
+#include "RichTextDelegate.hh"
 
 using namespace std;
 using namespace errormining;
 using namespace miningviewer;
 
-MinerMainWindow::MinerMainWindow(QWidget *parent) : QMainWindow(parent)
+MinerMainWindow::MinerMainWindow(QWidget *parent) : QMainWindow(parent),
+    d_richTextDelegate(new RichTextDelegate(0))
 {
 	d_minerMainWindow.setupUi(this);
 
@@ -65,6 +67,7 @@ MinerMainWindow::MinerMainWindow(QWidget *parent) : QMainWindow(parent)
     connect(d_minerMainWindow.sentenceRegExpLineEdit, SIGNAL(returnPressed()),
         this, SLOT(sentenceRegExpChanged()));
 
+    d_minerMainWindow.sentenceView->setItemDelegate(d_richTextDelegate);
     d_minerMainWindow.sentenceView->setModel(&d_sentenceModel);
 }
 
