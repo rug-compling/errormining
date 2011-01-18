@@ -109,13 +109,14 @@ void MinerMainWindow::formSelected(QTreeWidgetItem *item, QTreeWidgetItem *)
         return;
 	}
 
-	QString form = item->text(1);
-	
+    uint rowid = item->data(0, Qt::UserRole).toUInt();
+
 	{
 		QSqlQuery formInfoQuery;
+
 		formInfoQuery.prepare("SELECT suspicion, freq, suspFreq, uniqSentsFreq"
-			" FROM forms WHERE form = :form");
-		formInfoQuery.bindValue(":form", form);
+            " FROM forms WHERE rowid = :rowid");
+        formInfoQuery.bindValue(":rowid", rowid);
 		formInfoQuery.exec();
 		formInfoQuery.next();
 		
@@ -472,14 +473,14 @@ void MinerMainWindow::showForms()
 	QSharedPointer<QSqlQuery> query;
 	if (suspThresholdMethod == AVG_MULTIPLIER_METHOD)
 	{
-		query = QSharedPointer<QSqlQuery>(new QSqlQuery("SELECT form, suspicion, suspFreq, uniqSentsFreq"
+        query = QSharedPointer<QSqlQuery>(new QSqlQuery("SELECT rowid, form, suspicion, suspFreq, uniqSentsFreq"
 			" FROM forms WHERE suspicion >= :avgMultiplier * (SELECT AVG(suspicion) FROM forms) "
 			" AND suspFreq >= :unparsableFreqThreshold AND freq >= :unparsableFreqThreshold"));
 		query->bindValue("avgMultiplier", avgMultiplier);
 	}
 	else
 	{
-		query = QSharedPointer<QSqlQuery>(new QSqlQuery("SELECT form, suspicion, suspFreq, uniqSentsFreq"
+        query = QSharedPointer<QSqlQuery>(new QSqlQuery("SELECT rowid, form, suspicion, suspFreq, uniqSentsFreq"
 			" FROM forms WHERE suspicion >= :suspThreshold"
 			" AND suspFreq >= :unparsableFreqThreshold AND freq >= :parsableFreqThreshold"));
 		query->bindValue("suspThreshold", suspThreshold);
@@ -491,10 +492,11 @@ void MinerMainWindow::showForms()
 
 	while (query->next())
 	{
-		QString form = query->value(0).toString();
-		double suspicion = query->value(1).toDouble();
-		uint suspFreq = query->value(2).toUInt();
-		uint uniqSentsFreq = query->value(3).toUInt();
+        QVariant id = query->value(0);
+        QString form = query->value(1).toString();
+        double suspicion = query->value(2).toDouble();
+        uint suspFreq = query->value(3).toUInt();
+        uint uniqSentsFreq = query->value(4).toUInt();
 
 		// If a regular expression was allocated, use it to filter forms;
 		// if this form does not match, skip it.
@@ -509,6 +511,7 @@ void MinerMainWindow::showForms()
 		QTreeWidgetItem *item = new FormTreeWidgetItem(0);
 		item->setText(0, QString::number(score));
 		item->setText(1, form);
+        item->setData(0, Qt::UserRole, id);
 		items.append(item);
 	}
 		
@@ -563,25 +566,20 @@ void MinerMainWindow::updateSentenceList()
 		if (d_minerMainWindow.formsTreeWidget->currentItem() == 0)
 			return;
 
-		QString form = d_minerMainWindow.formsTreeWidget->currentItem()->text(1);
-
         if (expr.isEmpty() || expr.isNull())
             sentenceQuery.prepare("SELECT sentences.sentence FROM sentences, formSentence"
-                " WHERE formSentence.formId = ("
-                "  SELECT forms.rowid FROM forms WHERE forms.form = :form LIMIT 1"
-                ") AND"
+                " WHERE formSentence.formId = :rowid AND"
                 " sentences.rowid = formSentence.sentenceId AND"
                 " sentences.unparsable = 'true'");
         else {
             sentenceQuery.prepare("SELECT sentences.sentence FROM sentences, formSentence"
-                                  " WHERE formSentence.formId = ("
-                                  "  SELECT forms.rowid FROM forms WHERE forms.form = :form LIMIT 1"
-                                  ") AND"
+                                  " WHERE formSentence.formId = :rowid AND"
                                   " sentences.rowid = formSentence.sentenceId AND"
                                   " sentences.unparsable = 'true' AND sentences.sentence REGEXP :regexp");
             sentenceQuery.bindValue(":regexp", expr);
         }
-        sentenceQuery.bindValue(":form", form);
+        uint rowid = d_minerMainWindow.formsTreeWidget->currentItem()->data(0, Qt::UserRole).toUInt();
+        sentenceQuery.bindValue(":rowid", rowid);
 	}
 
     sentenceQuery.exec();
