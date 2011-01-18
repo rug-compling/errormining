@@ -50,7 +50,6 @@ bool openDatabase(QString const &dbFilename)
 
     // Get the sqlite3 database handle
     QVariant handleV = db.driver()->handle();
-    qWarning() << handleV.typeName();
     if (handleV.isValid() && qstrcmp(handleV.typeName(), "sqlite3*") == 0) {
          sqlite3 *handle = *static_cast<sqlite3 **>(handleV.data());
          if (handle != 0)
