@@ -8,7 +8,6 @@
 #include <QModelIndex>
 #include <QRegExp>
 #include <QSharedPointer>
-#include <QSortFilterProxyModel>
 #include <QSqlQueryModel>
 #include <QString>
 #include <QTreeWidgetItem>
@@ -52,7 +51,7 @@ private:
     bool removeFormShallow(const QString &form);
 	void showForms();
 	errormining::ScoringMethod scoringMethod();
-	void updateSentenceList();
+    void updateSentenceList();
 	void updateStatistics();
 	void writeSettings();
 
@@ -60,7 +59,6 @@ private:
 	PreferencesDialog d_preferencesDialog;
 	QSharedPointer<QRegExp> d_filterRegExp;
     QSqlQueryModel d_sentenceModel;
-    QSortFilterProxyModel d_proxySentenceModel;
 };
 
 }

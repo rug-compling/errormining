@@ -19,3 +19,5 @@ SOURCES += FormTreeWidgetItem.cpp \
 # Internal headers
 HEADERS += MinerMainWindow.ih \
     PreferencesDialog.ih
+
+LIBS += -lsqlite3

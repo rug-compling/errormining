@@ -31,11 +31,10 @@ MinerMainWindow::MinerMainWindow(QWidget *parent) : QMainWindow(parent)
 	// Regular expression LineEdits.
 	connect(d_minerMainWindow.regExpLineEdit, SIGNAL(returnPressed()),
 		this, SLOT(regExpChanged()));
-	connect(d_minerMainWindow.sentenceRegExpLineEdit, SIGNAL(returnPressed()),
-		this, SLOT(sentenceRegExpChanged()));
+    connect(d_minerMainWindow.sentenceRegExpLineEdit, SIGNAL(returnPressed()),
+        this, SLOT(sentenceRegExpChanged()));
 
-    d_proxySentenceModel.setSourceModel(&d_sentenceModel);
-    d_minerMainWindow.sentenceView->setModel(&d_proxySentenceModel);
+    d_minerMainWindow.sentenceView->setModel(&d_sentenceModel);
 }
 
 void MinerMainWindow::close()
@@ -65,11 +64,8 @@ bool MinerMainWindow::isValidForm(QString const &form) const
 
 void MinerMainWindow::formSelected(QTreeWidgetItem *item, QTreeWidgetItem *)
 {
-	if (d_minerMainWindow.allSentenceMatchCheckBox->isChecked())
-	{
+    if (d_minerMainWindow.allSentenceMatchCheckBox->isChecked())
 		d_minerMainWindow.sentenceRegExpLineEdit->clear();
-        d_proxySentenceModel.setFilterRegExp(QRegExp());
-    }
 
 	if (item == 0) {
 		d_minerMainWindow.suspicionLabel->clear();
@@ -398,9 +394,7 @@ void MinerMainWindow::sentenceRegExpChanged()
 
 	// When the regexp string length is 0, change the pointer to the
 	// regexp to a null pointer to signal that no regexp should be used.
-    if (regexStr.size() == 0)
-        d_proxySentenceModel.setFilterRegExp(QRegExp());
-	else {
+    if (!regexStr.isEmpty()) {
         QRegExp sentenceFilterRegExp(QString("(") + regexStr + ")");
 
 		// Check if the regexp is valid. If not, we leave the existing
@@ -411,8 +405,6 @@ void MinerMainWindow::sentenceRegExpChanged()
                 sentenceFilterRegExp.errorString(), 5000);
 			return;
 		}
-
-        d_proxySentenceModel.setFilterRegExp(sentenceFilterRegExp);
     }
 
 	// There could still be a message in the status bar about a
@@ -525,15 +517,16 @@ void MinerMainWindow::updateSentenceList()
 {
     // Todo: Underline regex, escape HTML
 
+    QString expr(d_minerMainWindow.sentenceRegExpLineEdit->text());
+
     QSqlQuery sentenceQuery;
 
     d_minerMainWindow.sentenceView->scrollToTop();
-	if (d_minerMainWindow.allSentenceMatchCheckBox->isChecked() &&
-        d_proxySentenceModel.filterRegExp().pattern().size() != 0)
-	{
+    if (d_minerMainWindow.allSentenceMatchCheckBox->isChecked() &&
+        !expr.isEmpty() && !expr.isNull()) {
 		sentenceQuery.prepare("SELECT sentences.sentence FROM sentences"
-			" WHERE sentences.unparsable = 'true'");
-		sentenceQuery.exec();
+            " WHERE sentences.unparsable = 'true' AND sentences.sentence REGEXP :regexp");
+        sentenceQuery.bindValue(":regexp", expr);
 	}
 	else {
 		if (d_minerMainWindow.formsTreeWidget->currentItem() == 0)
@@ -541,16 +534,26 @@ void MinerMainWindow::updateSentenceList()
 
 		QString form = d_minerMainWindow.formsTreeWidget->currentItem()->text(1);
 
-		sentenceQuery.prepare("SELECT sentences.sentence FROM sentences, formSentence"
-            " WHERE formSentence.formId = ("
-            "  SELECT forms.rowid FROM forms WHERE forms.form = :form LIMIT 1"
-            ") AND"
-			" sentences.rowid = formSentence.sentenceId AND"
-			" sentences.unparsable = 'true'");
-		sentenceQuery.bindValue(":form", form);
-        sentenceQuery.exec();
+        if (expr.isEmpty() || expr.isNull())
+            sentenceQuery.prepare("SELECT sentences.sentence FROM sentences, formSentence"
+                " WHERE formSentence.formId = ("
+                "  SELECT forms.rowid FROM forms WHERE forms.form = :form LIMIT 1"
+                ") AND"
+                " sentences.rowid = formSentence.sentenceId AND"
+                " sentences.unparsable = 'true'");
+        else {
+            sentenceQuery.prepare("SELECT sentences.sentence FROM sentences, formSentence"
+                                  " WHERE formSentence.formId = ("
+                                  "  SELECT forms.rowid FROM forms WHERE forms.form = :form LIMIT 1"
+                                  ") AND"
+                                  " sentences.rowid = formSentence.sentenceId AND"
+                                  " sentences.unparsable = 'true' AND sentences.sentence REGEXP :regexp");
+            sentenceQuery.bindValue(":regexp", expr);
+        }
+        sentenceQuery.bindValue(":form", form);
 	}
 
+    sentenceQuery.exec();
     d_sentenceModel.setQuery(sentenceQuery);
 }
 
