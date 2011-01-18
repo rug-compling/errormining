@@ -80,6 +80,7 @@ void MinerMainWindow::copySentence()
     if (idx.isValid()) {
         QString sentence = d_sentenceModel.data(idx).toString();
         QApplication::clipboard()->setText(sentence);
+        QApplication::clipboard()->setText(sentence, QClipboard::Selection);
     }
 }
 
