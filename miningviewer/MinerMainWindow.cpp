@@ -44,9 +44,9 @@ MinerMainWindow::MinerMainWindow(QWidget *parent) : QMainWindow(parent)
 
 	d_minerMainWindow.formsTreeWidget->setSortingEnabled(true);
 
-	connect(d_minerMainWindow.copyAction, SIGNAL(activated()),
+    connect(d_minerMainWindow.copyAction, SIGNAL(triggered()),
 		this, SLOT(copySentence()));
-	connect(d_minerMainWindow.preferencesAction, SIGNAL(activated()),
+    connect(d_minerMainWindow.preferencesAction, SIGNAL(triggered()),
 		this, SLOT(showPreferences()));
 	connect(d_minerMainWindow.scoringComboBox, SIGNAL(currentIndexChanged(int)),
 		this, SLOT(scoringMethodChanged(int)));
@@ -55,7 +55,7 @@ MinerMainWindow::MinerMainWindow(QWidget *parent) : QMainWindow(parent)
 		this, SLOT(formSelected(QTreeWidgetItem *, QTreeWidgetItem *)));
     connect(d_minerMainWindow.removeFormPushButton, SIGNAL(clicked()),
 		this, SLOT(removeSelectedForms()));
-	connect(d_minerMainWindow.saveAction, SIGNAL(activated()),
+    connect(d_minerMainWindow.saveAction, SIGNAL(triggered()),
 		this, SLOT(saveForms()));
 	
 
