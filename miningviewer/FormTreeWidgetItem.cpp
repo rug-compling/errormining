@@ -1,4 +1,8 @@
-#include "FormTreeWidgetItem.ih"
+#include <QTreeWidgetItem>
+
+#include "FormTreeWidgetItem.hh"
+
+using namespace miningviewer;
 
 bool FormTreeWidgetItem::operator<(QTreeWidgetItem const &other) const
 {

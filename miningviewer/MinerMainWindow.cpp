@@ -1,4 +1,35 @@
-#include "MinerMainWindow.ih"
+#include <cmath>
+#include <set>
+
+#include <QClipboard>
+#include <QDialog>
+#include <QErrorMessage>
+#include <QFile>
+#include <QFileDialog>
+#include <QIODevice>
+#include <QMainWindow>
+#include <QMessageBox>
+#include <QRegExp>
+#include <QSettings>
+#include <QSharedPointer>
+#include <QSqlError>
+#include <QSqlQuery>
+#include <QSqlQueryModel>
+#include <QTextDocument>
+#include <QTextStream>
+#include <QTreeWidgetItem>
+#include <QWidget>
+
+#include <errormining/ScoringMethod.hh>
+
+#include "global.hh"
+#include "FormTreeWidgetItem.hh"
+#include "MinerMainWindow.hh"
+#include "PreferencesDialog.hh"
+
+using namespace std;
+using namespace errormining;
+using namespace miningviewer;
 
 MinerMainWindow::MinerMainWindow(QWidget *parent) : QMainWindow(parent)
 {

@@ -1,4 +1,16 @@
-#include "PreferencesDialog.ih"
+#include <limits>
+
+#include <QDialog>
+#include <QDoubleValidator>
+#include <QIntValidator>
+#include <QMessageBox>
+#include <QSettings>
+#include <QString>
+
+#include "global.hh"
+#include "PreferencesDialog.hh"
+
+using namespace std;
 
 PreferencesDialog::PreferencesDialog(QWidget *parent) : QDialog(parent)
 {

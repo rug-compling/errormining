@@ -1,6 +1,0 @@
-#include <QTreeWidgetItem>
-
-#include "FormTreeWidgetItem.hh"
-
-using namespace miningviewer;
-
