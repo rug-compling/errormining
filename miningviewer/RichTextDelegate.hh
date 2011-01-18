@@ -5,6 +5,7 @@
 #include <QPainter>
 #include <QStyleOptionViewItem>
 #include <QStyledItemDelegate>
+#include <QTextDocument>
 
 class QLabel;
 class QObject;
@@ -18,6 +19,7 @@ protected:
 private:
     int d_column;
     QLabel *d_label;
+    mutable QTextDocument d_document;
 };
 
 #endif // RICHTEXTDELEGATE_HH

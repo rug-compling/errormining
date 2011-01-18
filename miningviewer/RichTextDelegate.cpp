@@ -39,8 +39,9 @@ void RichTextDelegate::paint(QPainter *painter,
                          : option.palette.text().color());
 
     QRect labelRect(option.rect);
-    d_label->setFixedSize(qMax(0, labelRect.width()), labelRect.height());
     d_label->setPalette(palette);
+    d_label->setFont(option.font);
+    d_label->setFixedSize(qMax(0, labelRect.width()), labelRect.height());
 
     QString text = index.model()->data(index).toString();
     d_label->setText(text);
@@ -64,9 +65,8 @@ QSize RichTextDelegate::sizeHint(QStyleOptionViewItem const &option,
 
     QString text = index.model()->data(index).toString();
 
-    QTextDocument doc;
-    doc.setDefaultFont(option.font);
-    doc.setHtml(text);
+    d_document.setDefaultFont(option.font);
+    d_document.setHtml(text);
 
-    return QSize(doc.idealWidth(), option.fontMetrics.height());
+    return QSize(d_document.idealWidth(), option.fontMetrics.height());
 }
