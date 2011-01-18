@@ -76,7 +76,11 @@ void MinerMainWindow::close()
 
 void MinerMainWindow::copySentence()
 {
-    //d_minerMainWindow.sentenceTextEdit->copy();
+    QModelIndex idx = d_minerMainWindow.sentenceView->currentIndex();
+    if (idx.isValid()) {
+        QString sentence = d_sentenceModel.data(idx).toString();
+        QApplication::clipboard()->setText(sentence);
+    }
 }
 
 bool MinerMainWindow::isValidForm(QString const &form) const
