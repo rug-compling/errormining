@@ -61,6 +61,16 @@
               <string>Suspicion * ln(f(uniqSuspSents))</string>
              </property>
             </item>
+            <item>
+             <property name="text">
+              <string>Suspicion * delta</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Suspicion * ln(delta)</string>
+             </property>
+            </item>
            </widget>
           </item>
           <item row="1" column="0">

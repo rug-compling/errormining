@@ -66,6 +66,10 @@ ScoringMethod selectScoringMethod(string const &scoringMethod)
 			return SCORING_SUSP_LN_OBS;
 		else if (scoringMethod == "scoring_susp_ln_uniqsents")
 			return SCORING_SUSP_LN_UNIQSENTS;
+        else if (scoringMethod == "scoring_susp_delta")
+            return SCORING_SUSP_DELTA;
+        else if (scoringMethod == "scoring_susp_ln_delta")
+            return SCORING_SUSP_LN_DELTA;
 
 		cerr << "Unknown scoring method: '" << scoringMethod <<
 			"', using 'scoring_susp'." << endl;
@@ -78,16 +82,17 @@ FormScoreSet scoreForms(ScoringMethod scoringMethod)
 	FormScoreSet formScores;
 	QSharedPointer<ScoreFun> scoreFun = selectScoreFun(scoringMethod);
 
-	QSqlQuery query("SELECT form, suspicion, suspFreq, uniqSentsFreq"
+    QSqlQuery query("SELECT form, suspicion, freq, suspFreq, uniqSentsFreq"
 		" FROM forms");// WHERE suspicion > 1.5 * (SELECT AVG(suspicion) FROM forms)");
 	while (query.next())
 	{
 		QString form = query.value(0).toString();
 		double suspicion = query.value(1).toDouble();
-		uint suspFreq = query.value(2).toUInt();
-		uint uniqSentsFreq = query.value(3).toUInt();
+        uint freq = query.value(2).toUInt();
+        uint suspFreq = query.value(3).toUInt();
+        uint uniqSentsFreq = query.value(4).toUInt();
 
-		double score = (*scoreFun)(suspicion, suspFreq, uniqSentsFreq);
+        double score = (*scoreFun)(suspicion, freq, suspFreq, uniqSentsFreq);
 		formScores.insert(FormScore(form, score, suspFreq));
 	}
 

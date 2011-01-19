@@ -412,7 +412,7 @@ void MinerMainWindow::saveForms()
 				continue;
 
 		// Score this form.
-		double score = (*scoreFun)(suspicion, suspFreq, uniqSentsFreq);
+        double score = (*scoreFun)(suspicion, freq, suspFreq, uniqSentsFreq);
 
 		formsOut << form << " " << score << " " << freq << " " << suspFreq << "\n";
 	}
@@ -478,14 +478,14 @@ void MinerMainWindow::showForms()
 	QSharedPointer<QSqlQuery> query;
 	if (suspThresholdMethod == AVG_MULTIPLIER_METHOD)
 	{
-        query = QSharedPointer<QSqlQuery>(new QSqlQuery("SELECT rowid, form, suspicion, suspFreq, uniqSentsFreq"
+        query = QSharedPointer<QSqlQuery>(new QSqlQuery("SELECT rowid, form, suspicion, freq, suspFreq, uniqSentsFreq"
 			" FROM forms WHERE suspicion >= :avgMultiplier * (SELECT AVG(suspicion) FROM forms) "
 			" AND suspFreq >= :unparsableFreqThreshold AND freq >= :unparsableFreqThreshold"));
 		query->bindValue("avgMultiplier", avgMultiplier);
 	}
 	else
 	{
-        query = QSharedPointer<QSqlQuery>(new QSqlQuery("SELECT rowid, form, suspicion, suspFreq, uniqSentsFreq"
+        query = QSharedPointer<QSqlQuery>(new QSqlQuery("SELECT rowid, form, suspicion, freq, suspFreq, uniqSentsFreq"
 			" FROM forms WHERE suspicion >= :suspThreshold"
 			" AND suspFreq >= :unparsableFreqThreshold AND freq >= :parsableFreqThreshold"));
 		query->bindValue("suspThreshold", suspThreshold);
@@ -500,8 +500,9 @@ void MinerMainWindow::showForms()
         QVariant id = query->value(0);
         QString form = query->value(1).toString();
         double suspicion = query->value(2).toDouble();
-        uint suspFreq = query->value(3).toUInt();
-        uint uniqSentsFreq = query->value(4).toUInt();
+        uint freq = query->value(3).toUInt();
+        uint suspFreq = query->value(4).toUInt();
+        uint uniqSentsFreq = query->value(5).toUInt();
 
 		// If a regular expression was allocated, use it to filter forms;
 		// if this form does not match, skip it.
@@ -510,7 +511,7 @@ void MinerMainWindow::showForms()
 				continue;
 
 		// Score this form.
-		double score = (*scoreFun)(suspicion, suspFreq, uniqSentsFreq);
+        double score = (*scoreFun)(suspicion, freq, suspFreq, uniqSentsFreq);
 
 		// Create and add an item for this form.
 		QTreeWidgetItem *item = new FormTreeWidgetItem(0);
@@ -546,6 +547,10 @@ ScoringMethod MinerMainWindow::scoringMethod()
 		return SCORING_SUSP_LN_OBS;
 	case 4:
 		return SCORING_SUSP_LN_UNIQSENTS;
+    case 5:
+        return SCORING_SUSP_DELTA;
+    case 6:
+        return SCORING_SUSP_LN_DELTA;
 	default:
 		// Unknown scoring method.
 		return SCORING_SUSP;
