@@ -84,12 +84,12 @@ inline double ScoreSuspLnUniqSents::operator()(double suspicion, size_t, size_t,
 
 inline double ScoreSuspDelta::operator()(double suspicion, size_t freq, size_t suspFreq, size_t) const
 {
-    return suspicion * (suspFreq - (freq - suspFreq));
+    return suspicion * (suspFreq - (static_cast<double>(freq) - suspFreq));
 }
 
 inline double ScoreSuspLnDelta::operator()(double suspicion, size_t freq, size_t suspFreq, size_t) const
 {
-    return suspicion * log(suspFreq - (freq - suspFreq));
+    return suspicion * log(suspFreq - (static_cast<double>(freq) - suspFreq));
 }
 
 }
