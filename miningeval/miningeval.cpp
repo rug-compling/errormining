@@ -104,6 +104,7 @@ QSet<size_t> allSentences(bool unparsable)
 	QSet<size_t> sentenceIds;
 	
 	QSqlQuery query;
+	query.setForwardOnly(true);
 	query.prepare("SELECT sentences.rowid FROM sentences "
 		"WHERE sentences.unparsable = :unparsable");
 	query.bindValue(":unparsable", unparsable);
