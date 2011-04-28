@@ -122,6 +122,7 @@ QSet<size_t> formSentences(QString const &form, bool unparsable)
 	QSet<size_t> sentenceIds;
 
 	QSqlQuery query;
+	query.setForwardOnly(true);
 	query.prepare("SELECT formSentence.sentenceId "
 		"FROM forms, formSentence, sentences "
 		"WHERE forms.form = :form AND forms.rowid = formSentence.formId AND "
