@@ -14,3 +14,7 @@ set(CMAKE_CXX_FLAGS "-DFLEXIBLE -DNUMBERS -DSTOPBIT -DNEXTBIT -DMORPH_INFIX -DPO
 
 add_subdirectory(libmine)
 add_subdirectory(mine)
+add_subdirectory(createminedb)
+add_subdirectory(miningeval)
+add_subdirectory(miningviewer)
+
