@@ -20,6 +20,7 @@ set(LIBMINE_HEADERS
   errormining/Form.hh
   errormining/Miner.hh
   errormining/Observer.hh
+  errormining/Reader.hh
   errormining/ScoringMethod.hh
   errormining/Sentence.hh
   errormining/TokenizedSentenceReader.hh
