@@ -1,5 +1,6 @@
 set(LIBMINE_SOURCES
   fadd/fadd.cpp
+  src/CharacterReader.cpp
   src/Form/Form.cpp
   src/HashAutomaton/HashAutomaton.cpp
   src/HashedCorpus/HashedCorpus.cpp
@@ -13,6 +14,7 @@ set(LIBMINE_SOURCES
 )
 
 set(LIBMINE_HEADERS
+  errormining/CharacterReader.hh
   errormining/HashedCorpus.hh
   errormining/SentenceHandler.hh
   errormining/SuffixArray.hh

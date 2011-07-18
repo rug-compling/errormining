@@ -10,11 +10,15 @@
 
 #include <errormining/SuffixArray.hh>
 
+// This class is really wrong, and should be replaced by a generic
+// option handling class.
+
 class ProgramOptions
 {
 public:
 	ProgramOptions(int argc, char *argv[]);
 	std::vector<std::string> const &arguments() const;
+    bool charMining() const;
 	double expansionFactorAlpha() const;
 	size_t n() const;
 	size_t m() const;
@@ -33,6 +37,7 @@ private:
 	ProgramOptions &operator=(ProgramOptions const &other);
 
 	std::string d_programName;
+    bool d_charMining;
 	size_t d_n;
 	size_t d_m;
 	bool d_ngramExpansion;
@@ -64,6 +69,11 @@ T parseString(std::string const &str)
 inline std::vector<std::string> const &ProgramOptions::arguments() const
 {
 	return *d_arguments;
+}
+
+inline bool ProgramOptions::charMining() const
+{
+    return d_charMining;
 }
 
 inline double ProgramOptions::expansionFactorAlpha() const

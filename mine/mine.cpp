@@ -6,9 +6,11 @@
 
 #include <QSharedPointer>
 
+#include <errormining/CharacterReader.hh>
 #include <errormining/HashedCorpus.hh>
 #include <errormining/Miner.hh>
 #include <errormining/Observer.hh>
+#include <errormining/Reader.hh>
 #include <errormining/SentenceHandler.hh>
 #include <errormining/SuffixArray.hh>
 #include <errormining/TokenizedSentenceReader.hh>
@@ -43,6 +45,7 @@ void usage(string const &programName)
 			"  -m m\t\tCreate ngrams upto length m (only used with -c)" << endl <<
 			"  -o alg\tSort algorithm (stlsort or ssort, default: ssort)" << endl <<
 			"  -q\t\tBe quiet" << endl <<
+            "  -r\t\tCharacter-based mining" << endl <<
 			"  -s t\t\tSuspicion threshold for excluding suspicious observations" << endl <<
 			"  -t t\t\tThreshold for determining the fixed-point" << endl <<
 			"  -u freq\tShow forms observed >= freq in unparsable sentences" << endl << endl <<
@@ -63,13 +66,17 @@ QSharedPointer<HashedCorpus> readHashedCorpus(ProgramOptions const &programOptio
 	if (!goodIn.good())
 		throw runtime_error("Could not read " + programOptions.arguments()[2]);
 
-	TokenizedSentenceReader reader;
+    QSharedPointer<Reader> reader;
+    if (programOptions.charMining())
+        reader = QSharedPointer<Reader>(new CharacterReader);
+    else
+        reader = QSharedPointer<Reader>(new TokenizedSentenceReader);
 
 	QSharedPointer<HashedCorpus> hashedCorpus(new HashedCorpus(parsableHashAutomaton,
 			unparsableHashAutomaton));
-	reader.addHandler(hashedCorpus.data());
+	reader->addHandler(hashedCorpus.data());
 
-	reader.read(goodIn, badIn);
+	reader->read(goodIn, badIn);
 
 	return hashedCorpus;
 }
@@ -126,15 +133,20 @@ int main(int argc, char *argv[])
 	if (programOptions->verbose())
 		cerr << "Done!" << endl;
 
-	// Construct a sentence reader.
-	TokenizedSentenceReader reader;
+
+    // Construct a sentence reader.
+    QSharedPointer<Reader> reader;
+    if (programOptions->charMining())
+        reader = QSharedPointer<Reader>(new CharacterReader);
+    else
+        reader = QSharedPointer<Reader>(new TokenizedSentenceReader);
 
 	// Create a miner, and register it as a handler for the sentence reader.
 	Miner miner(parsableHashAutomaton, unparsableHashAutomaton, goodSuffixArray,
 			badSuffixArray, programOptions->n(), programOptions->m(),
 			programOptions->ngramExpansion(), programOptions->expansionFactorAlpha(),
 			programOptions->smoothing(), programOptions->smoothingBeta());
-	reader.addHandler(&miner);
+	reader->addHandler(&miner);
 
 	// Observe the mining process, if we want verbose output.
 	QSharedPointer<CycleNotifier> cycleNotifier;
@@ -160,7 +172,7 @@ int main(int argc, char *argv[])
 	if (programOptions->verbose())
 		cerr << "Reading parsable and unparsable sentences... ";
 
-	reader.read(goodIn, badIn);
+	reader->read(goodIn, badIn);
 
 	if (programOptions->verbose())
 		cerr << "Done!" << endl;
