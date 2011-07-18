@@ -165,8 +165,11 @@ int main(int argc, char *argv[])
 	if (programOptions->verbose())
 		cerr << "Done!" << endl;
 
-	if (programOptions->verbose())
+	if (programOptions->verbose()) {
+		std::set<Form, FormProbComp> forms = miner.forms();
+		cerr << "Number of forms after expansion: " << forms.size() << endl;
 		cerr << "Mining";
+	}
 
 	// Start mining.
 	miner.mine(programOptions->threshold(), programOptions->suspThreshold());
