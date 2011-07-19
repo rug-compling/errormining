@@ -322,13 +322,15 @@ double Miner::ngramRatio(
 		std::vector<int>::const_iterator const &ngramBegin,
 		std::vector<int>::const_iterator const &ngramEnd) const
 {
+    QVector<int> ngram;
+    copy(ngramBegin, ngramEnd, back_inserter(ngram));
+
 	// See if we have cached the ratio if this is a unigram.
 	if (distance(ngramBegin, ngramEnd) == 1)
-	{
-		QHash<int, double>::const_iterator iter =
-			d_unigramRatioCache->find(*ngramBegin);
-		if (iter != d_unigramRatioCache->end())
-			return iter.value();
+	{                
+        double *ratio;
+        if ((ratio = d_ratioCache->object(ngram)) != 0)
+            return *ratio;
 	}
 
 	// Since a different hashing function is used for parsable sentences,
@@ -349,7 +351,7 @@ double Miner::ngramRatio(
 
 	// Cache if this was a unigram.
 	if (distance(ngramBegin, ngramEnd) == 1)
-		(*d_unigramRatioCache)[*ngramBegin] = ratio;
+        d_ratioCache->insert(ngram, new double(ratio), ngram.size());
 
 	return ratio;
 }

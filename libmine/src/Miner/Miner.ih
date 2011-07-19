@@ -7,7 +7,9 @@
 #include <string>
 #include <vector>
 
+#include <QCache>
 #include <QHash>
+#include <QVector>
 
 #include <errormining/Form.hh>
 #include <errormining/Miner.hh>

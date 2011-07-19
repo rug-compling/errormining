@@ -9,9 +9,11 @@
 #include <utility>
 #include <vector>
 
+#include <QCache>
 #include <QHash>
 #include <QSet>
 #include <QSharedPointer>
+#include <QVector>
 
 #include "Form.hh"
 #include "HashAutomaton.hh"
@@ -98,7 +100,7 @@ public:
 		d_smoothing(smoothing), d_smoothingBeta(smoothingBeta),
 		d_forms(new QSet<FormPtr>()),
 		d_sentences(new std::list<Sentence>()),
-		d_unigramRatioCache(new QHash<int, double>()) {}
+        d_ratioCache(new QCache<QVector<int>, double>(1000000)) {}
 
 	~Miner();
 
@@ -188,7 +190,7 @@ private:
 	double d_smoothingBeta;
 	QSharedPointer<FormPtrSet> d_forms;
 	QSharedPointer<std::list<Sentence> > d_sentences;
-	QSharedPointer<QHash<int, double> > d_unigramRatioCache;
+    QSharedPointer<QCache<QVector<int>, double> > d_ratioCache;
 };
 
 inline bool operator==(FormPtr lhs, FormPtr rhs)
@@ -207,5 +209,20 @@ inline Miner::~Miner()
 }
 
 }
+
+template <typename T>
+inline uint qHash(QVector<T> const &vec)
+{
+    uint seed = qHash(*(vec.begin()));
+    
+    // Hash a vector of values, the hash combination method is derrived
+    // from Boost hash_combine().
+    for (typename QVector<T>::const_iterator iter = vec.begin() + 1;
+         iter != vec.end(); ++iter)
+        seed ^= qHash(*iter) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    
+    return seed;
+}
+
 
 #endif /*MINER_HH_*/
