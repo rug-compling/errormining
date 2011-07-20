@@ -1,5 +1,6 @@
 set(LIBMINE_SOURCES
   fadd/fadd.cpp
+  src/BestRatioExpander.cpp
   src/Form/Form.cpp
   src/HashAutomaton/HashAutomaton.cpp
   src/HashedCorpus/HashedCorpus.cpp
@@ -7,12 +8,15 @@ set(LIBMINE_SOURCES
   src/Observable/Observable.cpp
   src/ScoringMethod/ScoringMethod.cpp
   src/Sentence/Sentence.cpp
+  src/SimpleExpander.cpp
   src/SuffixArray/SuffixArray.cpp
   src/TokenizedSentenceReader/TokenizedSentenceReader.cpp
   src/util/ssort/ssort.cpp
 )
 
 set(LIBMINE_HEADERS
+  errormining/BestRatioExpander.hh
+  errormining/Expander.hh
   errormining/HashedCorpus.hh
   errormining/SentenceHandler.hh
   errormining/SuffixArray.hh
@@ -22,6 +26,7 @@ set(LIBMINE_HEADERS
   errormining/Observer.hh
   errormining/ScoringMethod.hh
   errormining/Sentence.hh
+  errormining/SimpleExpander.hh
   errormining/TokenizedSentenceReader.hh
   errormining/util/ssort.hh
   errormining/Observable.hh
