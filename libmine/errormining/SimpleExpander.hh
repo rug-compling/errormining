@@ -11,6 +11,7 @@
 
 namespace errormining {
     /**
+     * Simple expander that includes all n to m-grams starting at the given unigram.
      */
     class SimpleExpander : public Expander
     {

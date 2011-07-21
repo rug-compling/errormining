@@ -15,7 +15,7 @@ namespace errormining {
     
     class HashAutomaton;
 
-    //
+    // Handy typedefs.
     typedef QSharedPointer<HashAutomaton const> HashAutomatonPtr;
     typedef QSharedPointer<SuffixArray<int> const> SuffixArrayPtr;
     
@@ -24,6 +24,10 @@ namespace errormining {
     
     typedef std::pair<TokensIter, TokensIter> TokensIterPair;
 
+    /**
+     * This struct represents an expansion. An expander could choose to expand a unigram
+     * to a longer n-gram. An n-gram is represented as an iterator pair.
+     */
     struct Expansion
     {
         Expansion(TokensIterPair newIters,
@@ -38,6 +42,10 @@ namespace errormining {
         size_t unparsableFreq;
     };
     
+    /**
+     * Base class for expanders. An expander expands a unigram (possibly) to a longer
+     * n-gram.
+     */
     class Expander
     {
     public:
@@ -50,6 +58,14 @@ namespace errormining {
           d_freqCache(new QCache<std::vector<int>, std::pair<size_t, size_t> >(1000000)) {}
         
         virtual ~Expander() {}
+        
+        /**
+         * Perform an expansion.
+         *
+         * @begin Iterator pointing to the unigram.
+         * @end End iterator pointing beyond the largest allowed expansion. This is
+         *      normally the end of the sentence.
+         */
         virtual std::vector<Expansion> operator()(TokensIter begin,
             TokensIter end) = 0;
 

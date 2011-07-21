@@ -9,8 +9,12 @@
 
 #include "Expander.hh"
 
-namespace errormining {    
+namespace errormining {  
+    
     /**
+     * Expander that expands an n-gram to a n+1-gram if the n+1-gram is more
+     * suspect than both of its n-grams. Suspicion is the ratio of observations
+     * within unparsable sentences and the total number of observations.
      */
     class BestRatioExpander : public Expander
     {
