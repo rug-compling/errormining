@@ -56,6 +56,8 @@ namespace errormining {
                     bestParsableFreq = mgramFreq.first;
                     bestUnparsableFreq = mgramFreq.second;
                 }
+                else
+                    break;
 
 			}
 			else
