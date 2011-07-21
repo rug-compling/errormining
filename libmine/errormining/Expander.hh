@@ -8,13 +8,10 @@
 #include <QHash>
 #include <QSharedPointer>
 
-namespace errormining {
-    // Forward declarations.
-    template <typename T>
-    class SuffixArray;
-    
-    class HashAutomaton;
+#include "HashAutomaton.hh"
+#include "SuffixArray.hh"
 
+namespace errormining {
     // Handy typedefs.
     typedef QSharedPointer<HashAutomaton const> HashAutomatonPtr;
     typedef QSharedPointer<SuffixArray<int> const> SuffixArrayPtr;
