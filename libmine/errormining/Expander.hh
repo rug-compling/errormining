@@ -1,12 +1,24 @@
 #ifndef ERRORMINING_EXPANDER_HH
 #define ERRORMINING_EXPANDER_HH
 
+#include <utility>
 #include <vector>
 
+#include <QCache>
 #include <QHash>
+#include <QSharedPointer>
 
 namespace errormining {
+    // Forward declarations.
+    template <typename T>
+    class SuffixArray;
+    
+    class HashAutomaton;
 
+    //
+    typedef QSharedPointer<HashAutomaton const> HashAutomatonPtr;
+    typedef QSharedPointer<SuffixArray<int> const> SuffixArrayPtr;
+    
     typedef std::vector<int> Tokens;
     typedef std::vector<int>::const_iterator TokensIter;
     
@@ -29,9 +41,35 @@ namespace errormining {
     class Expander
     {
     public:
+        Expander(HashAutomatonPtr parsableHA, HashAutomatonPtr unparsableHA,
+                 SuffixArrayPtr goodSA, SuffixArrayPtr badSA)
+        : d_parsableHashAutomaton(parsableHA),
+          d_unparsableHashAutomaton(unparsableHA),
+          d_goodSuffixArray(goodSA),
+          d_badSuffixArray(badSA),
+          d_freqCache(new QCache<std::vector<int>, std::pair<size_t, size_t> >(1000000)) {}
+        
         virtual ~Expander() {}
         virtual std::vector<Expansion> operator()(TokensIter begin,
             TokensIter end) = 0;
+
+    protected:
+        // Retrieve the parsable/unparsable frequencies of an n-gram.
+        std::pair<size_t, size_t> ngramFreqs(TokensIter const &ngramBegin,
+                                             TokensIter const &ngramEnd) const;
+        
+        // Translate a sequence from the unparsable corpus to the parsable corpus. This
+        // is necessary, because both corpera use a different hash automaton.
+        Tokens unparsableToParsableHashCodes(
+                                             TokensIter const &unparsableNgramBegin,
+                                             TokensIter const &unparsableNgramEnd) const;
+        
+    private:
+        HashAutomatonPtr d_parsableHashAutomaton;
+        HashAutomatonPtr d_unparsableHashAutomaton;
+        SuffixArrayPtr d_goodSuffixArray;
+        SuffixArrayPtr d_badSuffixArray;
+        QSharedPointer<QCache<std::vector<int>, std::pair<size_t, size_t> > > d_freqCache;
     };
 
 }

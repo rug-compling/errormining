@@ -1,6 +1,7 @@
 set(LIBMINE_SOURCES
   fadd/fadd.cpp
   src/BestRatioExpander.cpp
+  src/Expander.cpp
   src/Form/Form.cpp
   src/HashAutomaton/HashAutomaton.cpp
   src/HashedCorpus/HashedCorpus.cpp
