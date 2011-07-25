@@ -164,89 +164,6 @@ double Miner::calculateFormSuspicions(double suspThreshold)
 	return maxDelta;
 }
 
-Sentence Miner::collectNgrams(double error, std::vector<int> const &hashedTokens)
-{
-	Sentence sentence(error);
-
-	// Simple n-gram collection: add all n to m-grams in a given sentence.
-	for (vector<int>::const_iterator iter = hashedTokens.begin();
-		iter + d_n <= hashedTokens.end(); ++iter)
-	{
-		for (size_t len = d_n; len <= d_m; ++len)
-		{
-			if (iter + len > hashedTokens.end())
-				break;
-
-			IntVecIterPair ngram(iter, iter + len);
-			newSuspForm(ngram, &sentence);
-		}
-	}
-
-	return sentence;
-}
-
-Sentence Miner::expandNgrams(double error, std::vector<int> const &hashedTokens)
-{
-	Sentence sentence(error);
-
-	for (vector<int>::const_iterator iter = hashedTokens.begin();
-		iter + d_n <= hashedTokens.end(); ++iter)
-	{
-		// Initially, the best n-gram is the shortest one we start with.
-		// 'Best n-gram' is defined as the n-gram with the highest
-		// unparsable:parsable ratio.
-		IntVecIterPair bestNgram(iter, iter + d_n);
-
-		double bestNgramRatio = ngramRatio(bestNgram.first, bestNgram.second);
-
-		for (vector<int>::const_iterator endIter = iter + d_n + 1;
-			endIter <= hashedTokens.end(); ++endIter)
-		{
-			// Get the n+1-gram, which we will call a m-gram.
-			IntVecIterPair mgram(iter, endIter);
-			double mgramRatio = ngramRatio(mgram.first, mgram.second);
-
-			// Get the second n-gram within the current m-gram.
-			IntVecIterPair ngram(iter + 1, endIter);
-
-			// Calculate the expansion factor, if it is senseful.
-			double factor = 1.0;
-			if (d_expansionFactorAlpha != 0.0)
-				factor = expansionFactor(mgram.first, mgram.second);
-
-			// If the m-gram has a worse ratio (in terms of relatively more
-			// occurrances in unparsable sentences), we'll extend the n-gram.
-			// The ratio of 'ngram' is not precalculated - the evaluation is
-			// shortwired if mgramRatio < bestNgramRatio, so we may not
-			// actually need it.
-			if (mgramRatio > factor * bestNgramRatio
-				&& mgramRatio > factor * ngramRatio(ngram.first, ngram.second))
-			{
-				bestNgram = mgram;
-				bestNgramRatio = mgramRatio;
-			}
-			else
-				break;
-		}
-
-		newSuspForm(bestNgram, &sentence);
-	}
-
-	return sentence;
-}
-
-
-double Miner::expansionFactor(std::vector<int>::const_iterator const &ngramBegin,
-		std::vector<int>::const_iterator const &ngramEnd) const
-{
-	SuffixArray<int>::IterPair badIters = d_badSuffixArray->find(ngramBegin,
-			ngramEnd);
-	size_t badFreq = distance(badIters.first, badIters.second);
-
-	return 1 + exp(-d_expansionFactorAlpha * static_cast<double>(badFreq));
-}
-
-
 set<Form, FormProbComp> Miner::forms() const
 {
 	set<Form, FormProbComp> forms;
@@ -262,18 +179,27 @@ set<Form, FormProbComp> Miner::forms() const
 void Miner::handleSentence(vector<string> const &tokens, double error)
 {
 	// The prescanner can give the necessary frequency information for
-	// occurances of forms in parsable sentences.
+	// occurences of forms in parsable sentences.
 	if (error == 0.0)
 		return;
 
-	vector<int> hashedTokens;
+	Tokens hashedTokens;
 	transform(tokens.begin(), tokens.end(), back_inserter(hashedTokens),
 		*d_unparsableHashAutomaton);
 
-	if (d_ngramExpansion)
-		d_sentences->push_back(expandNgrams(error, hashedTokens));
-	else
-		d_sentences->push_back(collectNgrams(error, hashedTokens));
+    Sentence sentence(error);
+    for (TokensIter iter = hashedTokens.begin(); iter != hashedTokens.end();
+        ++iter)
+    {
+        std::vector<Expansion> expansions = (*d_expander)(
+            iter, hashedTokens.end());
+        
+        for (std::vector<Expansion>::const_iterator expIter = expansions.begin();
+                expIter != expansions.end(); ++expIter)
+            newSuspForm(*expIter, &sentence);
+    }
+    
+    d_sentences->push_back(sentence);
 }
 
 void Miner::mine(double threshold, double suspThreshold)
@@ -286,9 +212,9 @@ void Miner::mine(double threshold, double suspThreshold)
 	notify();
 }
 
-void Miner::newSuspForm(IntVecIterPair const &bestNgram, Sentence *sentence)
+void Miner::newSuspForm(Expansion const &expansion, Sentence *sentence)
 {
-	vector<int> bestNgramVec(bestNgram.first, bestNgram.second);
+	Tokens bestNgramVec(expansion.iters.first, expansion.iters.second);
 
 	Form form(bestNgramVec);
 	FormPtr formPtr(&form);
@@ -297,61 +223,15 @@ void Miner::newSuspForm(IntVecIterPair const &bestNgram, Sentence *sentence)
 	// want to add it if the form is of interest to us.
 	FormPtrSet::const_iterator formIter = d_forms->find(formPtr);
 	if (formIter == d_forms->end()) {
-		vector<int> parsableBestNgram = unparsableToParsableHashCodes(
-				bestNgramVec.begin(), bestNgramVec.end());
-
-		// Look up the number of unsuspicious observations of the ngram
-		// with the highest unparsable:parsable ratio.
-		SuffixArray<int>::IterPair goodIters =
-			d_goodSuffixArray->find(parsableBestNgram.begin(),
-					parsableBestNgram.end());
-		size_t unsuspObservations = distance(goodIters.first, goodIters.second);
-
-		formPtr.value = new Form(bestNgramVec, 0.0, unsuspObservations);
+		formPtr.value = new Form(bestNgramVec, 0.0, expansion.parsableFreq);
 		d_forms->insert(formPtr);
 		formIter = d_forms->find(formPtr);
 	}
-
+    
 	// Store observations of the Form in a sentence-representation. This
 	// is used by the miner to calculate observations suspicions.
 	sentence->addObservedForm(formIter->value);
 	formIter->value->newSuspObservation();
-}
-
-double Miner::ngramRatio(
-		std::vector<int>::const_iterator const &ngramBegin,
-		std::vector<int>::const_iterator const &ngramEnd) const
-{
-	// See if we have cached the ratio if this is a unigram.
-	if (distance(ngramBegin, ngramEnd) == 1)
-	{
-		QHash<int, double>::const_iterator iter =
-			d_unigramRatioCache->find(*ngramBegin);
-		if (iter != d_unigramRatioCache->end())
-			return iter.value();
-	}
-
-	// Since a different hashing function is used for parsable sentences,
-	// we'll have to convert the n-gram in unparsable hash codes to
-	// parsable hash codes.
-	vector<int> parsableNgram = unparsableToParsableHashCodes(ngramBegin,
-			ngramEnd);
-
-	SuffixArray<int>::IterPair goodIters = d_goodSuffixArray->find(parsableNgram.begin(),
-			parsableNgram.end());
-	size_t goodFreq = distance(goodIters.first, goodIters.second);
-
-	SuffixArray<int>::IterPair badIters = d_badSuffixArray->find(ngramBegin,
-			ngramEnd);
-	size_t badFreq = distance(badIters.first, badIters.second);
-
-	double ratio = static_cast<double>(badFreq) / (goodFreq + badFreq);
-
-	// Cache if this was a unigram.
-	if (distance(ngramBegin, ngramEnd) == 1)
-		(*d_unigramRatioCache)[*ngramBegin] = ratio;
-
-	return ratio;
 }
 
 void Miner::removeLowSuspForms(double suspThreshold)
@@ -389,26 +269,4 @@ double Miner::smootheSuspicion(double suspicion, double avgSuspicion,
 	// Smoothe, by increasing bias for the form suspicion when there are
 	// more suspicious observations of that form.
 	return lambda * suspicion + (1 - lambda) * avgSuspicion;
-}
-
-
-std::vector<int> Miner::unparsableToParsableHashCodes(
-		std::vector<int>::const_iterator const &unparsableNgramBegin,
-		std::vector<int>::const_iterator const &unparsableNgramEnd) const
-{
-	// Since different hash automata are used for parsable and unparsable
-	// sentences, we often need to convert the hashcode for a token from
-	// a 'parsable hashcode' to an 'unparsable hashcode'.
-
-	// Convert from unparsable hash codes to strings.
-	vector<string> stringNgram;
-	transform(unparsableNgramBegin, unparsableNgramEnd,
-			back_inserter(stringNgram), *d_unparsableHashAutomaton);
-
-	// Convert from strings to parsable hash codes.
-	vector<int> parsableNgram;
-	transform(stringNgram.begin(), stringNgram.end(), back_inserter(parsableNgram),
-			*d_parsableHashAutomaton);
-
-	return parsableNgram;
 }

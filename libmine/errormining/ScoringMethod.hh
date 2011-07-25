@@ -74,7 +74,7 @@ inline double ScoreSuspUniqSents::operator()(double suspicion, size_t, size_t, s
 
 inline double ScoreSuspLnObs::operator()(double suspicion, size_t, size_t suspFreq, size_t) const
 {
-	return suspicion * log(suspFreq);
+	return suspicion * (1 + log(suspFreq));
 }
 
 inline double ScoreSuspLnUniqSents::operator()(double suspicion, size_t, size_t, size_t uniqSentsFreq) const
@@ -84,12 +84,18 @@ inline double ScoreSuspLnUniqSents::operator()(double suspicion, size_t, size_t,
 
 inline double ScoreSuspDelta::operator()(double suspicion, size_t freq, size_t suspFreq, size_t) const
 {
-    return suspicion * (suspFreq - (static_cast<double>(freq) - suspFreq));
+    return suspicion * (static_cast<double>(suspFreq) - (static_cast<double>(freq) - static_cast<double>(suspFreq)));
 }
 
 inline double ScoreSuspLnDelta::operator()(double suspicion, size_t freq, size_t suspFreq, size_t) const
 {
-    return suspicion * log(suspFreq - (static_cast<double>(freq) - suspFreq));
+  double delta = static_cast<double>(suspFreq) - (static_cast<double>(freq) - static_cast<double>(suspFreq));
+
+  if (delta < 0.0)
+    return 0.0;
+  else
+    return suspicion * (1 + log(delta));
+    //return suspicion * log(static_cast<double>(suspFreq) - (static_cast<double>(freq) - static_cast<double>(suspFreq)));
 }
 
 }

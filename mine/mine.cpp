@@ -6,12 +6,14 @@
 
 #include <QSharedPointer>
 
+#include <errormining/BestRatioExpander.hh>
 #include <errormining/CharacterReader.hh>
 #include <errormining/HashedCorpus.hh>
 #include <errormining/Miner.hh>
 #include <errormining/Observer.hh>
 #include <errormining/Reader.hh>
 #include <errormining/SentenceHandler.hh>
+#include <errormining/SimpleExpander.hh>
 #include <errormining/SuffixArray.hh>
 #include <errormining/TokenizedSentenceReader.hh>
 
@@ -141,11 +143,19 @@ int main(int argc, char *argv[])
     else
         reader = QSharedPointer<Reader>(new TokenizedSentenceReader);
 
+    QSharedPointer<Expander> expander;
+    if (programOptions->ngramExpansion())
+        expander = QSharedPointer<Expander>(new BestRatioExpander(parsableHashAutomaton,
+            unparsableHashAutomaton, goodSuffixArray, badSuffixArray, programOptions->n(),
+            programOptions->expansionFactorAlpha()));
+    else
+        expander = QSharedPointer<Expander>(new SimpleExpander(parsableHashAutomaton,
+            unparsableHashAutomaton, goodSuffixArray, badSuffixArray, programOptions->n(),
+            programOptions->m()));
+    
 	// Create a miner, and register it as a handler for the sentence reader.
-	Miner miner(parsableHashAutomaton, unparsableHashAutomaton, goodSuffixArray,
-			badSuffixArray, programOptions->n(), programOptions->m(),
-			programOptions->ngramExpansion(), programOptions->expansionFactorAlpha(),
-			programOptions->smoothing(), programOptions->smoothingBeta());
+	Miner miner(parsableHashAutomaton, unparsableHashAutomaton,
+            expander, programOptions->smoothing(), programOptions->smoothingBeta());
 	reader->addHandler(&miner);
 
 	// Observe the mining process, if we want verbose output.
@@ -177,8 +187,11 @@ int main(int argc, char *argv[])
 	if (programOptions->verbose())
 		cerr << "Done!" << endl;
 
-	if (programOptions->verbose())
+	if (programOptions->verbose()) {
+		std::set<Form, FormProbComp> forms = miner.forms();
+		cerr << "Number of forms after expansion: " << forms.size() << endl;
 		cerr << "Mining";
+	}
 
 	// Start mining.
 	miner.mine(programOptions->threshold(), programOptions->suspThreshold());
