@@ -194,7 +194,10 @@ int main(int argc, char *argv[])
 	}
 
 	// Start mining.
-	miner.mine(programOptions->threshold(), programOptions->suspThreshold());
+  if (programOptions->nonIter())
+    miner.mineNonIter();
+  else
+    miner.mine(programOptions->threshold(), programOptions->suspThreshold());
 
 	if (programOptions->verbose())
 		cerr << " Done!" << endl;

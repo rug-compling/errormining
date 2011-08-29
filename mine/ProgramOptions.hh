@@ -22,6 +22,7 @@ public:
 	double expansionFactorAlpha() const;
 	size_t n() const;
 	size_t m() const;
+  bool nonIter() const;
 	size_t ngramExpansion() const;
 	size_t frequency() const;
 	std::string const &programName() const;
@@ -50,6 +51,7 @@ private:
 	double d_suspThreshold;
 	double d_threshold;
 	bool d_verbose;
+  bool d_nonIter;
 	QSharedPointer<std::vector<std::string> > d_arguments;
 };
 
@@ -94,6 +96,11 @@ inline size_t ProgramOptions::n() const
 inline size_t ProgramOptions::ngramExpansion() const
 {
 	return d_ngramExpansion;
+}
+
+inline bool ProgramOptions::nonIter() const
+{
+  return d_nonIter;
 }
 
 inline size_t ProgramOptions::frequency() const

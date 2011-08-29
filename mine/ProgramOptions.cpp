@@ -6,7 +6,7 @@ ProgramOptions::ProgramOptions(int argc, char *argv[])
 	d_frequency(2), d_smoothing(false), d_smoothingBeta(0.1),
 	d_sortAlgorithm(SuffixArray<int>::SSORT), d_suspFrequency(0),
 	d_suspThreshold(0.001), d_threshold(0.001), d_verbose(true),
-	d_arguments(new vector<string>())
+  d_nonIter(false), d_arguments(new vector<string>())
 {
 	d_programName = argv[0];
 
@@ -14,7 +14,7 @@ ProgramOptions::ProgramOptions(int argc, char *argv[])
 	opterr = 0;
 
 	int opt;
-	while ((opt = getopt(argc, argv, "b:ce:f:m:n:o:qrs:t:u")) != -1)
+	while ((opt = getopt(argc, argv, "b:ce:f:im:n:o:qrs:t:u")) != -1)
 	{
 		switch (opt)
 		{
@@ -31,6 +31,9 @@ ProgramOptions::ProgramOptions(int argc, char *argv[])
 		case 'f':
 			d_frequency = parseString<size_t>(optarg);
 			break;
+    case 'i':
+      d_nonIter = true;
+      break;
 		case 'm':
 			d_m = parseString<size_t>(optarg);
 			break;

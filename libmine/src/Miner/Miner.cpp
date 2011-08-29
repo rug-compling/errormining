@@ -212,6 +212,17 @@ void Miner::mine(double threshold, double suspThreshold)
 	notify();
 }
 
+void Miner::mineNonIter()
+{
+  for (FormPtrSet::iterator iter = d_forms->begin();
+    iter != d_forms->end(); ++iter)
+  {
+    double susp = iter->value->nSuspObservations() /
+      static_cast<double>(iter->value->nObservations());
+    iter->value->setSuspicion(susp);
+  }
+}
+
 void Miner::newSuspForm(Expansion const &expansion, Sentence *sentence)
 {
 	Tokens bestNgramVec(expansion.iters.first, expansion.iters.second);

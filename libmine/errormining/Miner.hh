@@ -127,6 +127,8 @@ public:
 	 *  analysis.
 	 */
 	void mine(double threshold = 0.001, double suspThreshold = 0.0);
+
+  void mineNonIter();
 private:
 	typedef std::pair<std::vector<int>::const_iterator,
 		std::vector<int>::const_iterator> IntVecIterPair;
