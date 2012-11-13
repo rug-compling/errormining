@@ -155,7 +155,7 @@ SuffixArray<T> &SuffixArray<T>::operator=(SuffixArray<T> const &other)
 template <typename T>
 std::vector<T> const &SuffixArray<T>::data() const
 {
-	return *data;
+	return *d_data;
 }
 
 template <typename T>
