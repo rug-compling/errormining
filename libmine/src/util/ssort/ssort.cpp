@@ -246,8 +246,8 @@ namespace util
 {
 
 enum {
-	ORIG = ~(~0u>>1),			/* sign bit */
-	BUCK = ~(~0u>>1)
+	ORIG = ~(~0ul>>1),			/* sign bit */
+	BUCK = ~(~0ul>>1)
 };
 
 long pred(long i, long h, long n)
