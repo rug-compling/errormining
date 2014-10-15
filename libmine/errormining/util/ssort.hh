@@ -8,7 +8,7 @@ namespace errormining
 namespace util
 {
 
-void ssort(std::vector<int> *a);
+void ssort(std::vector<long> *a);
 
 }
 }

@@ -250,29 +250,29 @@ enum {
 	BUCK = ~(~0u>>1)
 };
 
-int pred(int i, int h, int n)
+long pred(long i, long h, long n)
 {
-	int t = i - h;
+	long t = i - h;
 	if (t < 0)
 		return t + n;
 	else
 		return t;
 }
 
-int succ(int i, int h, int n)
+long succ(long i, long h, long n)
 {
-	int t = i + h;
+	long t = i + h;
 	if (t >= n)
 		return t - n;
 	else
 		return t;
 }
 
-void ssort(vector<int> *sarr)
+void ssort(vector<long> *sarr)
 {
-	vector<int> &a = *sarr;
-	int h, i, j, l, n;
-	int k = 0;				/* initialized for lint */
+	vector<long> &a = *sarr;
+	long h, i, j, l, n;
+	long k = 0;				/* initialized for lint */
 
 	for(j=n=0; a[n]>0; n++)			/* find n */
 		if(a[n] > j)
@@ -281,7 +281,7 @@ void ssort(vector<int> *sarr)
 		throw domain_error("A hash code that is larger than the array size occurred,"
 				" or the delimiting element was smaller than 0!");
 
-	vector<int> p(a.size());
+	vector<long> p(a.size());
 
 	for(i=0; i<n; i++)			/* (0) initialize */
 		p[i] = i | ORIG;
