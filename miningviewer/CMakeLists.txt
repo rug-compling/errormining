@@ -5,6 +5,8 @@ if(SQLITE3_FOUND)
   include_directories(${SQLITE3_INCLUDE_DIR})
 endif()
 
+include_directories (${CMAKE_CURRENT_BINARY_DIR})
+
 set(miningviewer_SOURCES
   FormTreeWidgetItem.cpp
   MinerMainWindow.cpp
