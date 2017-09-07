@@ -145,4 +145,4 @@ References
 2. A generalized method for iterative error mining in parsing results,
    Daniël de Kok, Jianqiang Ma and Gertjan van Noord, ACL2009 Workshop
    Grammar Engineering Across Frameworks
-3. http://www.eti.pg.gda.pl/katedry/kiw/pracownicy/Jan.Daciuk/personal/fsa.html
+3. http://www.jandaciuk.pl/fsa.html
